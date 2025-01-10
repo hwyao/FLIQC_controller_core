@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 project(FLIQC_controller_core)
 
 # Set the C++ standard
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # set the options
@@ -12,14 +12,24 @@ else()
     set(FLIQC_BUILD_EXAMPLE_DEFAULT OFF)
 endif()
 
+if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+    set(FLIQC_DEBUG_MODE_DEFAULT ON)
+else()
+    set(FLIQC_DEBUG_MODE_DEFAULT OFF)
+endif()
+
 option(FLIQC_BUILD_EXAMPLE "Build the example" ${FLIQC_BUILD_EXAMPLE_DEFAULT})
+option(FLIQC_DEBUG_MODE "Build with debug mode" ${FLIQC_DEBUG_MODE_DEFAULT})
 
 # display the options
 message(STATUS 
   "[FLIQC_controller_core] Options:
          FLIQC_BUILD_EXAMPLE:     ${FLIQC_BUILD_EXAMPLE}
+            FLIQC_DEBUG_MODE:     ${FLIQC_DEBUG_MODE}
 ")
 
+# Find the external libraries
+find_package(Eigen3 REQUIRED)
 
 # Add and build external projects in configure time
 # You can use ExternalProject_Add here, but it will be then at compile time, which will case a bit problem by parallel build
@@ -56,7 +66,21 @@ set_target_properties(LCQPow_lib PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR}/external/LCQPow/include
 )
 
-# add the library
+# add the debug flags
+if(FLIQC_DEBUG_MODE)
+  add_compile_options(-g)
+endif()
+
+add_library(FLIQC_controller_core SHARED
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/LCQPow_bridge.cpp
+)
+target_include_directories(FLIQC_controller_core PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+target_link_libraries(FLIQC_controller_core PUBLIC
+  "$<LINK_GROUP:RESCAN,LCQPow_lib,osqp_lib,qpOASES_lib>"
+  Eigen3::Eigen
+)
 
 # add the executable
 if (FLIQC_BUILD_EXAMPLE)

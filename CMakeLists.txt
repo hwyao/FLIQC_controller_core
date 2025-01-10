@@ -86,12 +86,14 @@ target_link_libraries(FLIQC_controller_core PUBLIC
 if (FLIQC_BUILD_EXAMPLE)
     list(APPEND FLIQC_controller_core_EXAMPLE
         ${CMAKE_CURRENT_SOURCE_DIR}/example/Example_LCQPow.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/example/Example_LCQPow_bridge.cpp
     )
 
     foreach(_source IN ITEMS ${FLIQC_controller_core_EXAMPLE})
       get_filename_component(_name ${_source} NAME_WE)
       add_executable(${_name} ${_source})
-      target_link_libraries(${_name} PRIVATE LCQPow_lib osqp_lib qpOASES_lib)
+      target_link_libraries(${_name} PRIVATE FLIQC_controller_core LCQPow_lib osqp_lib qpOASES_lib)
+      target_include_directories(${_name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
     endforeach()
 endif()
     

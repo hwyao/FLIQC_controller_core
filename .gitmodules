@@ -1,0 +1,3 @@
+[submodule "external/LCQPow"]
+	path = external/LCQPow
+	url = https://github.com/hallfjonas/LCQPow

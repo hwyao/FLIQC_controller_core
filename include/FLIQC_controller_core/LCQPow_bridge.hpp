@@ -4,7 +4,7 @@
 #include <memory>
 #include <Eigen/Dense>
 
-namespace LCQPow_bridge {
+namespace FLIQC_controller_core {
     /**
      * @brief The input of the LCQProblem
      * 
@@ -57,7 +57,7 @@ namespace LCQPow_bridge {
 
     };
 
-    class LCQPow_raw {
+    class LCQPow_bridge {
     protected:
         /**
          * @brief forward implementation on external LCQPow
@@ -81,15 +81,15 @@ namespace LCQPow_bridge {
     
     public:
         /**
-         * @brief Construct a new LCQPow_raw object
+         * @brief Construct a new LCQPow_bridge object
          */
-        LCQPow_raw();
+        LCQPow_bridge();
         
         /**
-         * @brief Destroy the LCQPow_raw object
+         * @brief Destroy the LCQPow_bridge object
          * 
          */
-        ~LCQPow_raw() = default;
+        ~LCQPow_bridge() = default;
 
         /**
          * @brief update the options for the solver. Call this when you change the option attributes.
@@ -102,10 +102,10 @@ namespace LCQPow_bridge {
          */
         void updateOptions(void);
 
-        double stationarityTolerance;       //< Stationarity tolerance, tolerance for optimization
-        double complementarityTolerance;    //< Complementarity tolerance, tolerance for complementarity vertical constraint
-        double initialPenaltyParameter;     //< Initial penalty parameter, initial penalty parameter for complementarity
-        double penaltyUpdateFactor;         //< Penalty update factor, factor for updating penaltised complementarity term
+        double stationarityTolerance = 1.0e-3;       //< Stationarity tolerance, tolerance for optimization
+        double complementarityTolerance = 1.0e-3;            //< Complementarity tolerance, tolerance for complementarity vertical constraint
+        double initialPenaltyParameter = 0.01;      //< Initial penalty parameter, initial penalty parameter for complementarity
+        double penaltyUpdateFactor = 2.0;           //< Penalty update factor, factor for updating penaltised complementarity term
         int nVariables;               //< Number of variables
         int nConstraints;             //< Number of constraints
         int nComplementarity;         //< Number of complementarity variables

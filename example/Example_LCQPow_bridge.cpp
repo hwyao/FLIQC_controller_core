@@ -2,8 +2,8 @@
 #include<cmath>
 #include<iostream>
 
-void runLQCPow(const LCQPow_bridge::LCQProblemInput &input, LCQPow_bridge::LCQProblemOutput &output){
-    LCQPow_bridge::LCQPow_raw lcqp;
+void runLQCPow(const FLIQC_controller_core::LCQProblemInput &input, FLIQC_controller_core::LCQProblemOutput &output){
+    FLIQC_controller_core::LCQPow_bridge lcqp;
     lcqp.stationarityTolerance = 1e-3;
     lcqp.complementarityTolerance = 1e-3;
     lcqp.initialPenaltyParameter = 0.01;
@@ -18,8 +18,8 @@ void runLQCPow(const LCQPow_bridge::LCQProblemInput &input, LCQPow_bridge::LCQPr
 }
 
 int main(void){
-    LCQPow_bridge::LCQProblemInput input;
-    LCQPow_bridge::LCQProblemOutput output;
+    FLIQC_controller_core::LCQProblemInput input;
+    FLIQC_controller_core::LCQProblemOutput output;
 
     int N = 100;
     int nV = 2 + 2*N;

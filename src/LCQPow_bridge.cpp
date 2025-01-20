@@ -2,30 +2,31 @@
 #include <memory>
 #include <LCQProblem.hpp>
 
-namespace LCQPow_bridge{
-    class LCQPow_raw::LCQPow_impl{
+namespace FLIQC_controller_core{
+    class LCQPow_bridge::LCQPow_impl{
     public:
         std::unique_ptr<LCQPow::LCQProblem> lcqp;
         std::unique_ptr<LCQPow::Options> options;
     };
 
-    void LCQPow_raw::LCQPow_impl_deleter::operator()(LCQPow_bridge::LCQPow_raw::LCQPow_impl* p) {
+    void LCQPow_bridge::LCQPow_impl_deleter::operator()(LCQPow_bridge::LCQPow_bridge::LCQPow_impl* p) {
         delete p;
     }
 
-    LCQPow_raw::LCQPow_raw(): pimpl(new LCQPow_raw::LCQPow_impl()){
+    LCQPow_bridge::LCQPow_bridge(): pimpl(new LCQPow_bridge::LCQPow_impl()){
         this->pimpl->options = std::make_unique<LCQPow::Options>();
-        this->pimpl->options->setPrintLevel(LCQPow::PrintLevel::NONE);
+        //this->pimpl->options->setPrintLevel(LCQPow::PrintLevel::NONE);
+        this->updateOptions();
     }
 
-    void LCQPow_raw::updateOptions(void){
+    void LCQPow_bridge::updateOptions(void){
         this->pimpl->options->setStationarityTolerance(this->stationarityTolerance);
         this->pimpl->options->setComplementarityTolerance(this->complementarityTolerance);
         this->pimpl->options->setInitialPenaltyParameter(this->initialPenaltyParameter);
         this->pimpl->options->setPenaltyUpdateFactor(this->penaltyUpdateFactor);
     }
 
-    bool LCQPow_raw::runSolver(const LCQProblemInput &input, LCQProblemOutput &output){
+    bool LCQPow_bridge::runSolver(const LCQProblemInput &input, LCQProblemOutput &output){
         #ifdef FLIQC_DEBUG
         // check the size of the input matches what is needed
         #endif
@@ -64,7 +65,7 @@ namespace LCQPow_bridge{
         return success;
     }
 
-    LCQProblemDebug LCQPow_raw::getDebugStatistics(void){
+    LCQProblemDebug LCQPow_bridge::getDebugStatistics(void){
         return LCQProblemDebug();
     }
 }

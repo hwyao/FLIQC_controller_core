@@ -40,6 +40,7 @@ execute_process(
     COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .. 
             -DFLIQC_BASE_PATH=${CMAKE_CURRENT_SOURCE_DIR}
             -DFLIQC_BINARY_DIR=${CMAKE_BINARY_DIR}
+            -DFLIQC_DEBUG_MODE=${FLIQC_DEBUG_MODE}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/external/build
 )
 execute_process(
@@ -73,6 +74,7 @@ endif()
 
 add_library(FLIQC_controller_core SHARED
   ${CMAKE_CURRENT_SOURCE_DIR}/src/LCQPow_bridge.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/FLIQC_controllers.cpp
 )
 target_include_directories(FLIQC_controller_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -87,6 +89,7 @@ if (FLIQC_BUILD_EXAMPLE)
     list(APPEND FLIQC_controller_core_EXAMPLE
         ${CMAKE_CURRENT_SOURCE_DIR}/example/Example_LCQPow.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/example/Example_LCQPow_bridge.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/example/Example_FLIQC_controller_joint_velocity_basic.cpp
     )
 
     foreach(_source IN ITEMS ${FLIQC_controller_core_EXAMPLE})

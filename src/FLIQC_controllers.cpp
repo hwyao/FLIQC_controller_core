@@ -78,7 +78,8 @@ namespace FLIQC_controller_core {
             else{
                 // This is then the pseudo-inverse of the projector_control_to_dist vector
                 lcqp_input.A.block(0, nJoint + i, nJoint, 1) = 
-                (active_dist_inputs[i].projector_control_to_dist.transpose() / active_dist_inputs[i].projector_control_to_dist.norm());
+                - active_dist_inputs[i].projector_control_to_dist.transpose() * 
+                ((active_dist_inputs[i].projector_control_to_dist * active_dist_inputs[i].projector_control_to_dist.transpose()).inverse());
             }
         }
 

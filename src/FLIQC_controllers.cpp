@@ -51,7 +51,7 @@ namespace FLIQC_controller_core {
         lcqp_input.ubA = vel_guide;
 
         lcqp_input.lb = Eigen::VectorXd::Zero(nVariables);
-        lcqp_input.ub = Eigen::VectorXd::Constant(nVariables, std::numeric_limits<double>::infinity());
+        lcqp_input.ub = Eigen::VectorXd::Constant(nVariables, std::numeric_limits<double>::max());
         if (enable_lambda_constraint_in_x){
             lcqp_input.ub.tail(nContacts) = Eigen::VectorXd::Constant(nContacts, lambda_max);
         } 
@@ -61,8 +61,8 @@ namespace FLIQC_controller_core {
             lcqp_input.ub.head(nJoint) = q_dot_max;
         }
         else{
-            lcqp_input.lb.head(nJoint) = Eigen::VectorXd::Constant(nJoint, -std::numeric_limits<double>::infinity());
-            //lcqp_input.ub.head(nJoint) = Eigen::VectorXd::Constant(nJoint, std::numeric_limits<double>::infinity()); // overlapped
+            lcqp_input.lb.head(nJoint) = Eigen::VectorXd::Constant(nJoint, -std::numeric_limits<double>::max());
+            //lcqp_input.ub.head(nJoint) = Eigen::VectorXd::Constant(nJoint, std::numeric_limits<double>::max()); // already set
         }
 
         // construct the input of the LCQProblem: [2] all the distance-dependent input.

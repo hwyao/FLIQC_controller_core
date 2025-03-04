@@ -51,7 +51,7 @@ namespace FLIQC_controller_core {
         lcqp_input.ubA = vel_guide;
 
         lcqp_input.lb = Eigen::VectorXd::Zero(nVariables);
-        lcqp_input.ub = Eigen::VectorXd::Constant(nVariables, std::numeric_limits<double>::infinity());
+        lcqp_input.ub = Eigen::VectorXd::Constant(nVariables, std::numeric_limits<double>::max());
         if (enable_lambda_constraint_in_x){
             lcqp_input.ub.tail(nContacts) = Eigen::VectorXd::Constant(nContacts, lambda_max);
         } 
@@ -61,8 +61,8 @@ namespace FLIQC_controller_core {
             lcqp_input.ub.head(nJoint) = q_dot_max;
         }
         else{
-            lcqp_input.lb.head(nJoint) = Eigen::VectorXd::Constant(nJoint, -std::numeric_limits<double>::infinity());
-            //lcqp_input.ub.head(nJoint) = Eigen::VectorXd::Constant(nJoint, std::numeric_limits<double>::infinity()); // overlapped
+            lcqp_input.lb.head(nJoint) = Eigen::VectorXd::Constant(nJoint, -std::numeric_limits<double>::max());
+            //lcqp_input.ub.head(nJoint) = Eigen::VectorXd::Constant(nJoint, std::numeric_limits<double>::max()); // already set
         }
 
         // construct the input of the LCQProblem: [2] all the distance-dependent input.
@@ -78,7 +78,8 @@ namespace FLIQC_controller_core {
             else{
                 // This is then the pseudo-inverse of the projector_control_to_dist vector
                 lcqp_input.A.block(0, nJoint + i, nJoint, 1) = 
-                (active_dist_inputs[i].projector_control_to_dist.transpose() / active_dist_inputs[i].projector_control_to_dist.norm());
+                - active_dist_inputs[i].projector_control_to_dist.transpose() * 
+                ((active_dist_inputs[i].projector_control_to_dist * active_dist_inputs[i].projector_control_to_dist.transpose()).inverse());
             }
         }
 
@@ -90,6 +91,25 @@ namespace FLIQC_controller_core {
             lcqp_input.x0.resize(0);
             lcqp_input.y0.resize(0);
         }
+
+        #ifdef CONTROLLER_DEBUG
+            // print the input of the LCQP
+            std::cout << "Q: " << std::endl << lcqp_input.Q << std::endl;
+            std::cout << "g: " << std::endl << lcqp_input.g << std::endl;
+            std::cout << "L: " << std::endl << lcqp_input.L << std::endl;
+            std::cout << "lbL: " << std::endl << lcqp_input.lbL << std::endl;
+            std::cout << "ubL: " << std::endl << lcqp_input.ubL << std::endl;
+            std::cout << "R: " << std::endl << lcqp_input.R << std::endl;
+            std::cout << "lbR: " << std::endl << lcqp_input.lbR << std::endl;
+            std::cout << "ubR: " << std::endl << lcqp_input.ubR << std::endl;
+            std::cout << "A: " << std::endl << lcqp_input.A << std::endl;
+            std::cout << "lbA: " << std::endl << lcqp_input.lbA << std::endl;
+            std::cout << "ubA: " << std::endl << lcqp_input.ubA << std::endl;
+            std::cout << "lb: " << std::endl << lcqp_input.lb << std::endl;
+            std::cout << "ub: " << std::endl << lcqp_input.ub << std::endl;
+            std::cout << "x0: " << std::endl << lcqp_input.x0 << std::endl;
+            std::cout << "y0: " << std::endl << lcqp_input.y0 << std::endl;
+        #endif // CONTROLLER_DEBUG
         
         lcqp_solver.nVariables = nVariables;
         lcqp_solver.nConstraints = nContacts;

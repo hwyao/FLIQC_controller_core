@@ -15,7 +15,7 @@ namespace FLIQC_controller_core{
 
     LCQPow_bridge::LCQPow_bridge(): pimpl(new LCQPow_bridge::LCQPow_impl()){
         this->pimpl->options = std::make_unique<LCQPow::Options>();
-        //this->pimpl->options->setPrintLevel(LCQPow::PrintLevel::NONE);
+        this->pimpl->options->setPrintLevel(LCQPow::PrintLevel::NONE);
         this->updateOptions();
     }
 

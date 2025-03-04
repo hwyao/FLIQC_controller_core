@@ -64,7 +64,7 @@ set_target_properties(osqp_lib PROPERTIES
 add_library(LCQPow_lib SHARED IMPORTED)
 set_target_properties(LCQPow_lib PROPERTIES
   IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/external/LCQPow/lib/${CMAKE_FIND_LIBRARY_PREFIXES}lcqpow${CMAKE_SHARED_LIBRARY_SUFFIX}
-  INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR}/external/LCQPow/include
+  INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/external/LCQPow/include
 )
 
 # add the debug flags
@@ -83,6 +83,11 @@ target_link_libraries(FLIQC_controller_core PUBLIC
   "$<LINK_GROUP:RESCAN,LCQPow_lib,osqp_lib,qpOASES_lib>"
   Eigen3::Eigen
 )
+if (FLIQC_DEBUG_MODE)
+  target_compile_definitions(FLIQC_controller_core PUBLIC 
+    CONTROLLER_DEBUG
+  )
+endif()
 
 # add the executable
 if (FLIQC_BUILD_EXAMPLE)

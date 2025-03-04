@@ -100,8 +100,8 @@ namespace FLIQC_controller_core {
         double dt = 0.02;                     ///< The forward step for the optimization prediction in right complementarity constraint
         double eps = 0.01;                    ///< The safety margin for the forward step prediction in right complementarity constraint
         double active_threshold = 0.03;       ///< The active tolerance for considering the distance as active
-        double lambda_max = std::numeric_limits<double>::infinity();     ///< The maximum lambda value
-        double esc_vel_max = std::numeric_limits<double>::infinity();    ///< The maximum escape velocity calculated in R
+        double lambda_max = std::numeric_limits<double>::max();     ///< The maximum lambda value
+        double esc_vel_max = std::numeric_limits<double>::max();    ///< The maximum escape velocity calculated in R
         Eigen::VectorXd q_dot_max;            ///< The maximum joint velocity
 
         LCQPow_bridge lcqp_solver;            ///< The solver for the optimization problem

@@ -91,6 +91,25 @@ namespace FLIQC_controller_core {
             lcqp_input.x0.resize(0);
             lcqp_input.y0.resize(0);
         }
+
+        #ifdef CONTROLLER_DEBUG
+            // print the input of the LCQP
+            std::cout << "Q: " << std::endl << lcqp_input.Q << std::endl;
+            std::cout << "g: " << std::endl << lcqp_input.g << std::endl;
+            std::cout << "L: " << std::endl << lcqp_input.L << std::endl;
+            std::cout << "lbL: " << std::endl << lcqp_input.lbL << std::endl;
+            std::cout << "ubL: " << std::endl << lcqp_input.ubL << std::endl;
+            std::cout << "R: " << std::endl << lcqp_input.R << std::endl;
+            std::cout << "lbR: " << std::endl << lcqp_input.lbR << std::endl;
+            std::cout << "ubR: " << std::endl << lcqp_input.ubR << std::endl;
+            std::cout << "A: " << std::endl << lcqp_input.A << std::endl;
+            std::cout << "lbA: " << std::endl << lcqp_input.lbA << std::endl;
+            std::cout << "ubA: " << std::endl << lcqp_input.ubA << std::endl;
+            std::cout << "lb: " << std::endl << lcqp_input.lb << std::endl;
+            std::cout << "ub: " << std::endl << lcqp_input.ub << std::endl;
+            std::cout << "x0: " << std::endl << lcqp_input.x0 << std::endl;
+            std::cout << "y0: " << std::endl << lcqp_input.y0 << std::endl;
+        #endif // CONTROLLER_DEBUG
         
         lcqp_solver.nVariables = nVariables;
         lcqp_solver.nConstraints = nContacts;

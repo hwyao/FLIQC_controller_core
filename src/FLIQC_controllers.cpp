@@ -28,10 +28,15 @@ namespace FLIQC_controller_core {
         int nContacts = active_dist_inputs.size();
         int nVariables = nJoint + nContacts;
 
-        // construct the input of the LCQProblem: [1] all the close-constant input.
-        lcqp_input.Q = cost_input.Q;
-        lcqp_input.g = cost_input.g;
+        // construct the input of the LCQProblem: [0] The cost input
+        lcqp_input.Q = Eigen::MatrixXd::Zero(nVariables, nVariables);
+        lcqp_input.Q << cost_input.Q,                              Eigen::MatrixXd::Zero(nJoint, nContacts),
+                        Eigen::MatrixXd::Zero(nContacts, nJoint),  Eigen::MatrixXd::Identity(nContacts, nContacts);
+
+        lcqp_input.g = Eigen::VectorXd::Zero(nVariables);
+        lcqp_input.g << cost_input.g, Eigen::VectorXd::Zero(nContacts);
         
+        // construct the input of the LCQProblem: [1] all the close-constant input.
         lcqp_input.L = Eigen::MatrixXd::Zero(nContacts, nVariables);
         lcqp_input.L.block(0, nJoint, nContacts, nContacts) = Eigen::MatrixXd::Identity(nContacts, nContacts);
         lcqp_input.lbL = Eigen::VectorXd::Zero(nContacts);

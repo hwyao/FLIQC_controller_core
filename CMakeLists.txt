@@ -80,7 +80,9 @@ target_include_directories(FLIQC_controller_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 target_link_libraries(FLIQC_controller_core PUBLIC
-  "$<LINK_GROUP:RESCAN,LCQPow_lib,osqp_lib,qpOASES_lib>"
+  LCQPow_lib
+  osqp_lib
+  qpOASES_lib
   Eigen3::Eigen
 )
 if (FLIQC_DEBUG_MODE)

@@ -33,37 +33,40 @@ find_package(Eigen3 REQUIRED)
 
 # Add and build external projects in configure time
 # You can use ExternalProject_Add here, but it will be then at compile time, which will case a bit problem by parallel build
+set(FLIQC_EXTERNAL_CACHE_DIR ${CMAKE_CURRENT_BINARY_DIR}/external)
+set(FLIQC_EXTERNAL_BINARY_DIR ${FLIQC_EXTERNAL_CACHE_DIR}/build)
+
 execute_process(
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_SOURCE_DIR}/external/build
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${FLIQC_EXTERNAL_BINARY_DIR}
 )
 execute_process(
-    COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .. 
+    COMMAND ${CMAKE_COMMAND} ${CMAKE_CURRENT_SOURCE_DIR}/external
             -DFLIQC_BASE_PATH=${CMAKE_CURRENT_SOURCE_DIR}
-            -DFLIQC_BINARY_DIR=${CMAKE_BINARY_DIR}
+            -DFLIQC_BINARY_DIR=${FLIQC_EXTERNAL_BINARY_DIR}
             -DFLIQC_DEBUG_MODE=${FLIQC_DEBUG_MODE}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/external/build
+    WORKING_DIRECTORY ${FLIQC_EXTERNAL_CACHE_DIR}
 )
 execute_process(
     COMMAND ${CMAKE_COMMAND} --build .
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/external/build
+    WORKING_DIRECTORY ${FLIQC_EXTERNAL_CACHE_DIR}
 )
 
 add_library(qpOASES_lib SHARED IMPORTED)
 set_target_properties(qpOASES_lib PROPERTIES
-  IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/external/LCQPow/lib/${CMAKE_FIND_LIBRARY_PREFIXES}qpOASES${CMAKE_SHARED_LIBRARY_SUFFIX}
-  INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_BINARY_DIR}/external/LCQPow/external/src/qpoases/include
+  IMPORTED_LOCATION ${FLIQC_EXTERNAL_BINARY_DIR}/LCQPow/lib/${CMAKE_FIND_LIBRARY_PREFIXES}qpOASES${CMAKE_SHARED_LIBRARY_SUFFIX}
+  INTERFACE_INCLUDE_DIRECTORIES ${FLIQC_EXTERNAL_BINARY_DIR}/LCQPow/external/src/qpoases/include
   IMPORTED_NO_SONAME TRUE
 )
 
 add_library(osqp_lib SHARED IMPORTED)
 set_target_properties(osqp_lib PROPERTIES
-  IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/external/LCQPow/lib/${CMAKE_FIND_LIBRARY_PREFIXES}osqp${CMAKE_SHARED_LIBRARY_SUFFIX}
-  INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_BINARY_DIR}/external/LCQPow/external/src/osqp/include
+  IMPORTED_LOCATION ${FLIQC_EXTERNAL_BINARY_DIR}/LCQPow/lib/${CMAKE_FIND_LIBRARY_PREFIXES}osqp${CMAKE_SHARED_LIBRARY_SUFFIX}
+  INTERFACE_INCLUDE_DIRECTORIES ${FLIQC_EXTERNAL_BINARY_DIR}/LCQPow/external/src/osqp/include
 )
 
 add_library(LCQPow_lib SHARED IMPORTED)
 set_target_properties(LCQPow_lib PROPERTIES
-  IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/external/LCQPow/lib/${CMAKE_FIND_LIBRARY_PREFIXES}lcqpow${CMAKE_SHARED_LIBRARY_SUFFIX}
+  IMPORTED_LOCATION ${FLIQC_EXTERNAL_BINARY_DIR}/LCQPow/lib/${CMAKE_FIND_LIBRARY_PREFIXES}lcqpow${CMAKE_SHARED_LIBRARY_SUFFIX}
   INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/external/LCQPow/include
 )
 
@@ -73,11 +76,11 @@ if(FLIQC_DEBUG_MODE)
 endif()
 
 add_library(FLIQC_controller_core SHARED
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/LCQPow_bridge.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/FLIQC_controllers.cpp
+  src/LCQPow_bridge.cpp
+  src/FLIQC_controllers.cpp
 )
 target_include_directories(FLIQC_controller_core PUBLIC
-  ${CMAKE_CURRENT_SOURCE_DIR}/include
+  include
 )
 target_link_libraries(FLIQC_controller_core PUBLIC
   LCQPow_lib
@@ -93,17 +96,17 @@ endif()
 
 # add the executable
 if (FLIQC_BUILD_EXAMPLE)
-    list(APPEND FLIQC_controller_core_EXAMPLE
-        ${CMAKE_CURRENT_SOURCE_DIR}/example/Example_LCQPow.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/example/Example_LCQPow_bridge.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/example/Example_FLIQC_controller_joint_velocity_basic.cpp
-    )
+  list(APPEND FLIQC_controller_core_EXAMPLE
+    example/Example_LCQPow.cpp
+    example/Example_LCQPow_bridge.cpp
+    example/Example_FLIQC_controller_joint_velocity_basic.cpp
+  )
 
-    foreach(_source IN ITEMS ${FLIQC_controller_core_EXAMPLE})
-      get_filename_component(_name ${_source} NAME_WE)
-      add_executable(${_name} ${_source})
-      target_link_libraries(${_name} PRIVATE FLIQC_controller_core LCQPow_lib osqp_lib qpOASES_lib)
-      target_include_directories(${_name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-    endforeach()
+  foreach(_source IN ITEMS ${FLIQC_controller_core_EXAMPLE})
+    get_filename_component(_name ${_source} NAME_WE)
+    add_executable(${_name} ${_source})
+    target_link_libraries(${_name} PRIVATE FLIQC_controller_core LCQPow_lib osqp_lib qpOASES_lib)
+    target_include_directories(${_name} PUBLIC include)
+  endforeach()
 endif()
     

@@ -39,6 +39,13 @@ namespace FLIQC_controller_core {
     };
 
     /**
+     * @brief Write the input of the LCQProblem to a file.
+     * 
+     * Should be used to share the input of the problem for debugging and profiling.
+     */
+    void WriteInputToFile(const LCQProblemInput &input, const std::string &dirname);
+
+    /**
      * @brief The output of the LCQProblem
      * 
      * Which x and y are the primary and dual solution vectors. See LQCPow paper for more details.

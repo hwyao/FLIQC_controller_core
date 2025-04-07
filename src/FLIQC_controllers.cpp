@@ -1,6 +1,8 @@
 #include "FLIQC_controller_core/FLIQC_controllers.hpp"
 #include <stdexcept>
 #include <iostream>
+#include <fstream>
+#include <filesystem>
 
 namespace FLIQC_controller_core {
 
@@ -124,6 +126,7 @@ namespace FLIQC_controller_core {
         if (!isSuccess) {
             // display an error, throw an exception
             std::cout << "[ERROR] LCQP solver failed to find a solution." << std::endl;
+            WriteInputToFile(lcqp_input, "instance_1");
             throw std::runtime_error("LCQP solver failed to find a solution.");
         }
 

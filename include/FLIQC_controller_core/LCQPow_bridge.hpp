@@ -3,6 +3,8 @@
 
 #include <memory>
 #include <Eigen/Dense>
+#include <exception>
+#include <string>
 
 namespace FLIQC_controller_core {
     /**
@@ -39,13 +41,6 @@ namespace FLIQC_controller_core {
     };
 
     /**
-     * @brief Write the input of the LCQProblem to a file.
-     * 
-     * Should be used to share the input of the problem for debugging and profiling.
-     */
-    void WriteInputToFile(const LCQProblemInput &input, const std::string &dirname);
-
-    /**
      * @brief The output of the LCQProblem
      * 
      * Which x and y are the primary and dual solution vectors. See LQCPow paper for more details.
@@ -58,10 +53,86 @@ namespace FLIQC_controller_core {
     /**
      * @brief The debug statistics of the LCQProblem
      * 
-     * Which could be used for debugging and profiling the problem.
+     * Which could be used for debugging and profiling the problem. 
+     * For the exact meaning of each variable, please refer to the LCQPow documentation.
      */
     struct LCQProblemDebug {
+        struct Options {
+            double complementarityTolerance;
+            double stationarityTolerance;
+            double initialPenaltyParameter;
+            double penaltyUpdateFactor;
+            bool solveZeroPenaltyFirst;
+            bool perturbStep;
+            int maxIterations;
+            double maxPenaltyParameter;
+            int nDynamicPenalty;
+            double etaDynamicPenalty;
+            bool storeSteps;
+        } options;
 
+        struct OutputStatistics {
+            int iterTotal;
+            int iterOuter;
+            int subproblemIter;
+            double rhoOpt;
+            int status;
+            int qpSolver_exit_flag;
+            std::vector<std::vector<double>> xSteps;
+            std::vector<int> innerIters;
+            std::vector<int> subproblemIters;
+            std::vector<int> accuSubproblemIters;
+            std::vector<double> stepLength;
+            std::vector<double> stepSize;
+            std::vector<double> statVals;
+            std::vector<double> objVals;
+            std::vector<double> phiVals;
+            std::vector<double> meritVals;
+        } outputStatistics;
+    };
+
+    /**
+     * @brief Exception class for LCQPow solver failures.
+     * 
+     * This exception is thrown when the LCQPow solver fails to find a solution.
+     * It contains detailed information about the problem input, output, and debug statistics
+     * to assist in diagnosing the issue.
+     */
+    class LCQPowException : public std::exception {
+    public:
+        LCQProblemInput input;       //< The input of the LCQProblem
+        LCQProblemOutput output;     //< The output of the LCQProblem
+        LCQProblemDebug debug;       //< The debug statistics of the LCQProblem
+        size_t maxMatrixSize = 12;   //< Maximum size for matrix dimensions to display full content
+
+        /**
+         * @brief Construct a new LCQPowException object.
+         * 
+         * @param input The input of the LCQProblem.
+         * @param output The output of the LCQProblem.
+         * @param debug The debug statistics of the LCQProblem.
+         */
+        LCQPowException(const LCQProblemInput& input, const LCQProblemOutput& output, const LCQProblemDebug& debug);
+
+        /**
+         * @brief Get the exception message.
+         * 
+         * @return const char* The exception message.
+         */
+        const char* what() const noexcept override;
+
+    private:
+        std::string message; //< The formatted exception message.
+
+        /**
+         * @brief Format a matrix for output.
+         * 
+         * @tparam MatrixType The type of the matrix.
+         * @param matrix The matrix to format.
+         * @return std::string The formatted matrix as a string.
+         */
+        template <typename MatrixType>
+        std::string formatMatrix(const MatrixType& matrix) const;
     };
 
     class LCQPow_bridge {
@@ -122,9 +193,9 @@ namespace FLIQC_controller_core {
          * 
          * @param input the input of the problem
          * @param output the output of the problem
-         * @return true if the problem is solved successfully
+         * @throws std::runtime_error if loading the LCQP problem fails
          */
-        bool runSolver(const LCQProblemInput &input, LCQProblemOutput &output);
+        void runSolver(const LCQProblemInput &input, LCQProblemOutput &output);
 
         /**
          * @brief getDebugStatistics

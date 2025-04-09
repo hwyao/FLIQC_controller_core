@@ -4,92 +4,128 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 namespace FLIQC_controller_core{
+    LCQPowException::LCQPowException(const LCQProblemInput& input, const LCQProblemOutput& output, const LCQProblemDebug& debug)
+        : input(input), output(output), debug(debug) {
+        std::ostringstream oss;
+        oss << "LCQPowException occurred. Check the input, output and debug statistics for more details.\n";
 
-    void WriteInputToFile(const LCQProblemInput &input, const std::string &dirname) {
+        // Input
+        oss << "LCQProblemInput:\n";
+        oss << "    Q: " << formatMatrix(input.Q) << "\n";
+        oss << "    g: " << formatMatrix(input.g) << "\n";
+        oss << "    L: " << formatMatrix(input.L) << "\n";
+        oss << "    lbL: " << formatMatrix(input.lbL) << "\n";
+        oss << "    ubL: " << formatMatrix(input.ubL) << "\n";
+        oss << "    R: " << formatMatrix(input.R) << "\n";
+        oss << "    lbR: " << formatMatrix(input.lbR) << "\n";
+        oss << "    ubR: " << formatMatrix(input.ubR) << "\n";
+        oss << "    A: " << formatMatrix(input.A) << "\n";
+        oss << "    lbA: " << formatMatrix(input.lbA) << "\n";
+        oss << "    ubA: " << formatMatrix(input.ubA) << "\n";
+        oss << "    lb: " << formatMatrix(input.lb) << "\n";
+        oss << "    ub: " << formatMatrix(input.ub) << "\n";
+        oss << "    x0: " << formatMatrix(input.x0) << "\n";
+        oss << "    y0: " << formatMatrix(input.y0) << "\n";
 
-        // create directory 'failed_instances/<dirname>' if not exist
-        std::string output_dir = "/home/geriatronics/failed_lcqp_instances/" + dirname;
-        std::filesystem::create_directories(output_dir);
+        // Output
+        oss << "LCQProblemOutput:\n";
+        oss << "    x: " << formatMatrix(output.x) << "\n";
+        oss << "    y: " << formatMatrix(output.y) << "\n";
 
-        if (!std::filesystem::is_directory(output_dir)) {
-            std::cout << "Failed to create directory " << output_dir << std::endl;
-            return;
-        } else {
-            std::cout << "Directory " << output_dir << " created." << std::endl;
-        }
+        // Debug
+        oss << "LCQProblemDebug:\n";
+        oss << "    Options:\n";
+        oss << "        complementarityTolerance: " << debug.options.complementarityTolerance << "\n";
+        oss << "        stationarityTolerance: " << debug.options.stationarityTolerance << "\n";
+        oss << "        initialPenaltyParameter: " << debug.options.initialPenaltyParameter << "\n";
+        oss << "        penaltyUpdateFactor: " << debug.options.penaltyUpdateFactor << "\n";
+        oss << "        solveZeroPenaltyFirst: " << debug.options.solveZeroPenaltyFirst << "\n";
+        oss << "        perturbStep: " << debug.options.perturbStep << "\n";
+        oss << "        maxIterations: " << debug.options.maxIterations << "\n";
+        oss << "        maxPenaltyParameter: " << debug.options.maxPenaltyParameter << "\n";
+        oss << "        nDynamicPenalty: " << debug.options.nDynamicPenalty << "\n";
+        oss << "        etaDynamicPenalty: " << debug.options.etaDynamicPenalty << "\n";
+        oss << "        storeSteps: " << debug.options.storeSteps << "\n";
+        oss << "    OutputStatistics:\n";
+        oss << "        iterTotal: " << debug.outputStatistics.iterTotal << "\n";
+        oss << "        iterOuter: " << debug.outputStatistics.iterOuter << "\n";
+        oss << "        subproblemIter: " << debug.outputStatistics.subproblemIter << "\n";
+        oss << "        rhoOpt: " << debug.outputStatistics.rhoOpt << "\n";
+        oss << "        status: " << debug.outputStatistics.status << "\n";
+        oss << "        qpSolver_exit_flag: " << debug.outputStatistics.qpSolver_exit_flag << "\n";
+        oss << "        xSteps: " << formatVector(debug.outputStatistics.xSteps) << "\n";
+        oss << "        innerIters: " << formatVector(debug.outputStatistics.innerIters) << "\n";
+        oss << "        subproblemIters: " << formatVector(debug.outputStatistics.subproblemIters) << "\n";
+        oss << "        accuSubproblemIters: " << formatVector(debug.outputStatistics.accuSubproblemIters) << "\n";
+        oss << "        stepLength: " << formatVector(debug.outputStatistics.stepLength) << "\n";
+        oss << "        stepSize: " << formatVector(debug.outputStatistics.stepSize) << "\n";
+        oss << "        statVals: " << formatVector(debug.outputStatistics.statVals) << "\n";
+        oss << "        objVals: " << formatVector(debug.outputStatistics.objVals) << "\n";
+        oss << "        phiVals: " << formatVector(debug.outputStatistics.phiVals) << "\n";
+        oss << "        meritVals: " << formatVector(debug.outputStatistics.meritVals) << "\n";
 
-        // write each component to an individual file in the directory
-        std::ofstream file;
-
-        // Q
-        file.open(output_dir + "/Q.txt");
-        file << input.Q;
-        file.close();
-
-        // g
-        file.open(output_dir + "/g.txt");
-        file << input.g;
-        file.close();
-
-        // L
-        file.open(output_dir + "/L.txt");
-        file << input.L;
-        file.close();
-
-        // lbL
-        file.open(output_dir + "/lbL.txt");
-        file << input.lbL;
-        file.close();
-
-        // ubL
-        file.open(output_dir + "/ubL.txt");
-        file << input.ubL;
-        file.close();
-
-        // R
-        file.open(output_dir + "/R.txt");
-        file << input.R;
-        file.close();
-
-        // lbR
-        file.open(output_dir + "/lbR.txt");
-        file << input.lbR;
-        file.close();
-
-        // ubR
-        file.open(output_dir + "/ubR.txt");
-        file << input.ubR;
-        file.close();
-
-        // A
-        file.open(output_dir + "/A.txt");
-        file << input.A;
-        file.close();
-
-        // lbA
-        file.open(output_dir + "/lbA.txt");
-        file << input.lbA;
-        file.close();
-
-        // ubA
-        file.open(output_dir + "/ubA.txt");
-        file << input.ubA;
-        file.close();
-
-        // lb
-        file.open(output_dir + "/lb.txt");
-        file << input.lb;
-        file.close();
-
-        // ub
-        file.open(output_dir + "/ub.txt");
-        file << input.ub;
-        file.close();
-        
+        message = oss.str();
     }
 
+    const char* LCQPowException::what() const noexcept {
+        return message.c_str();
+    }
+
+    template <typename MatrixType>
+    std::string LCQPowException::formatMatrix(const MatrixType& matrix) const {
+        if (matrix.rows() > maxMatrixSize || matrix.cols() > maxMatrixSize) {
+            return "[" + std::to_string(matrix.rows()) + "x" + std::to_string(matrix.cols()) + " Matrix]";
+        } else {
+            std::ostringstream oss;
+            oss << "\n" << matrix;
+            return oss.str();
+        }
+    }
+
+    template <typename T>
+    std::string LCQPowException::formatVector(const std::vector<T>& vec) const {
+        if (vec.size() > maxMatrixSize) {
+            return "[" + std::to_string(vec.size()) + " elements]";
+        } else {
+            std::ostringstream oss;
+            oss << "[";
+            for (size_t i = 0; i < vec.size(); ++i) {
+                oss << vec[i];
+                if (i < vec.size() - 1) oss << ", ";
+            }
+            oss << "]";
+            return oss.str();
+        }
+    }
+
+    template <>
+    std::string LCQPowException::formatVector(const std::vector<std::vector<double>>& vec) const {
+        std::ostringstream oss;
+        if (vec.size() > maxMatrixSize) {
+            oss << "[" << vec.size() << " rows]";
+        } else {
+            oss << "[\n";
+            for (size_t i = 0; i < vec.size(); ++i) {
+                if (vec[i].size() > maxMatrixSize) {
+                    oss << "  [" << vec[i].size() << " elements]";
+                } else {
+                    oss << "  [";
+                    for (size_t j = 0; j < vec[i].size(); ++j) {
+                        oss << vec[i][j];
+                        if (j < vec[i].size() - 1) oss << ", ";
+                    }
+                    oss << "]";
+                }
+                if (i < vec.size() - 1) oss << ",";
+                oss << "\n";
+            }
+            oss << "]";
+        }
+        return oss.str();
+    }
 
     class LCQPow_bridge::LCQPow_impl{
     public:
@@ -114,12 +150,10 @@ namespace FLIQC_controller_core{
         this->pimpl->options->setPenaltyUpdateFactor(this->penaltyUpdateFactor);
     }
 
-    bool LCQPow_bridge::runSolver(const LCQProblemInput &input, LCQProblemOutput &output){
+    void LCQPow_bridge::runSolver(const LCQProblemInput &input, LCQProblemOutput &output){
         #ifdef FLIQC_DEBUG
         // check the size of the input matches what is needed
         #endif
-
-        bool success = true;
 
         this->pimpl->lcqp.reset(new LCQPow::LCQProblem(this->nVariables, this->nConstraints, this->nComplementarity));
         this->pimpl->lcqp->setOptions(*(this->pimpl->options));
@@ -131,29 +165,59 @@ namespace FLIQC_controller_core{
             input.lb.data(), input.ub.data(),
             input.x0.data(), input.y0.data()
         );
-
         if (retVal != LCQPow::SUCCESSFUL_RETURN){
-            success = false;
+            throw std::runtime_error("Failed to load LCQP problem.");
         }
 
         retVal = this->pimpl->lcqp->runSolver();
         if (retVal != LCQPow::SUCCESSFUL_RETURN){
-            success = false;
+            LCQProblemDebug debug = this->getDebugStatistics();
+            throw LCQPowException(input, output, debug);
         }
 
-        if(success){
-            double xOut[this->nVariables];
-            this->pimpl->lcqp->getPrimalSolution(xOut);
-            double yOut[this->nVariables + this->nConstraints + 2*this->nComplementarity];
-            this->pimpl->lcqp->getDualSolution(yOut);
-            output.x = Eigen::Map<Eigen::VectorXd>(xOut, this->nVariables);
-            output.y = Eigen::Map<Eigen::VectorXd>(yOut, this->nVariables + this->nConstraints + 2*this->nComplementarity);
-        }
-
-        return success;
+        double xOut[this->nVariables];
+        this->pimpl->lcqp->getPrimalSolution(xOut);
+        double yOut[this->nVariables + this->nConstraints + 2*this->nComplementarity];
+        this->pimpl->lcqp->getDualSolution(yOut);
+        output.x = Eigen::Map<Eigen::VectorXd>(xOut, this->nVariables);
+        output.y = Eigen::Map<Eigen::VectorXd>(yOut, this->nVariables + this->nConstraints + 2*this->nComplementarity);
     }
 
-    LCQProblemDebug LCQPow_bridge::getDebugStatistics(void){
-        return LCQProblemDebug();
+    LCQProblemDebug LCQPow_bridge::getDebugStatistics(void) {
+        LCQProblemDebug debug;
+
+        // Populate options
+        debug.options.complementarityTolerance = this->pimpl->options->getComplementarityTolerance();
+        debug.options.stationarityTolerance    = this->pimpl->options->getStationarityTolerance();
+        debug.options.initialPenaltyParameter  = this->pimpl->options->getInitialPenaltyParameter();
+        debug.options.penaltyUpdateFactor      = this->pimpl->options->getPenaltyUpdateFactor();
+        debug.options.solveZeroPenaltyFirst    = this->pimpl->options->getSolveZeroPenaltyFirst();
+        debug.options.perturbStep              = this->pimpl->options->getPerturbStep();
+        debug.options.maxIterations            = this->pimpl->options->getMaxIterations();
+        debug.options.maxPenaltyParameter      = this->pimpl->options->getMaxPenaltyParameter();
+        debug.options.nDynamicPenalty          = this->pimpl->options->getNDynamicPenalty();
+        debug.options.etaDynamicPenalty        = this->pimpl->options->getEtaDynamicPenalty();
+        debug.options.storeSteps               = this->pimpl->options->getStoreSteps();
+
+        // Populate output statistics
+        const auto& stats                      = this->pimpl->lcqp->getOutputStatistics();
+        debug.outputStatistics.iterTotal            = stats.getIterTotal();
+        debug.outputStatistics.iterOuter            = stats.getIterOuter();
+        debug.outputStatistics.subproblemIter       = stats.getSubproblemIter();
+        debug.outputStatistics.rhoOpt               = stats.getRhoOpt();
+        debug.outputStatistics.status               = stats.getSolutionStatus();
+        debug.outputStatistics.qpSolver_exit_flag   = stats.getQPSolverExitFlag();
+        debug.outputStatistics.xSteps               = stats.getxStepsStdVec();
+        debug.outputStatistics.innerIters           = stats.getInnerItersStdVec();
+        debug.outputStatistics.subproblemIters      = stats.getSubproblemItersStdVec();
+        debug.outputStatistics.accuSubproblemIters  = stats.getAccuSubproblemItersStdVec();
+        debug.outputStatistics.stepLength           = stats.getStepLengthStdVec();
+        debug.outputStatistics.stepSize             = stats.getStepSizeStdVec();
+        debug.outputStatistics.statVals             = stats.getStatValsStdVec();
+        debug.outputStatistics.objVals              = stats.getObjValsStdVec();
+        debug.outputStatistics.phiVals              = stats.getPhiValsStdVec();
+        debug.outputStatistics.meritVals            = stats.getMeritValsStdVec();
+
+        return debug;
     }
 }

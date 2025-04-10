@@ -133,6 +133,24 @@ namespace FLIQC_controller_core {
          */
         template <typename MatrixType>
         std::string formatMatrix(const MatrixType& matrix) const;
+
+        /**
+         * @brief Format a vector for output.
+         * 
+         * @tparam T The type of the vector elements.
+         * @param vec The vector to format.
+         * @return std::string The formatted vector as a string.
+         */
+        template <typename T>
+        std::string formatVector(const std::vector<T>& vec) const;
+
+        /**
+         * @brief Declaration of specialization of formatVector for vectors of vectors of doubles.
+         * 
+         * @param vec The vector of vectors of doubles to format.
+         * @return std::string The formatted vector of vectors as a string.
+         */
+        std::string formatDoubleVector(const std::vector<std::vector<double>>& vec) const;
     };
 
     class LCQPow_bridge {

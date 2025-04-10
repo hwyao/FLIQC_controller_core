@@ -1,10 +1,6 @@
 #include "FLIQC_controller_core/LCQPow_bridge.hpp"
 #include <memory>
 #include <LCQProblem.hpp>
-#include <filesystem>
-#include <fstream>
-#include <iostream>
-#include <sstream>
 
 namespace FLIQC_controller_core{
     LCQPowException::LCQPowException(const LCQProblemInput& input, const LCQProblemOutput& output, const LCQProblemDebug& debug)
@@ -56,7 +52,7 @@ namespace FLIQC_controller_core{
         oss << "        rhoOpt: " << debug.outputStatistics.rhoOpt << "\n";
         oss << "        status: " << debug.outputStatistics.status << "\n";
         oss << "        qpSolver_exit_flag: " << debug.outputStatistics.qpSolver_exit_flag << "\n";
-        oss << "        xSteps: " << formatVector(debug.outputStatistics.xSteps) << "\n";
+        oss << "        xSteps: " << formatDoubleVector(debug.outputStatistics.xSteps) << "\n";
         oss << "        innerIters: " << formatVector(debug.outputStatistics.innerIters) << "\n";
         oss << "        subproblemIters: " << formatVector(debug.outputStatistics.subproblemIters) << "\n";
         oss << "        accuSubproblemIters: " << formatVector(debug.outputStatistics.accuSubproblemIters) << "\n";
@@ -101,8 +97,7 @@ namespace FLIQC_controller_core{
         }
     }
 
-    template <>
-    std::string LCQPowException::formatVector(const std::vector<std::vector<double>>& vec) const {
+    std::string LCQPowException::formatDoubleVector(const std::vector<std::vector<double>>& vec) const {
         std::ostringstream oss;
         if (vec.size() > maxMatrixSize) {
             oss << "[" << vec.size() << " rows]";
@@ -200,7 +195,8 @@ namespace FLIQC_controller_core{
         debug.options.storeSteps               = this->pimpl->options->getStoreSteps();
 
         // Populate output statistics
-        const auto& stats                      = this->pimpl->lcqp->getOutputStatistics();
+        LCQPow::OutputStatistics stats; // Declare a proper OutputStatistics object
+        this->pimpl->lcqp->getOutputStatistics(stats); // Pass it by reference
         debug.outputStatistics.iterTotal            = stats.getIterTotal();
         debug.outputStatistics.iterOuter            = stats.getIterOuter();
         debug.outputStatistics.subproblemIter       = stats.getSubproblemIter();

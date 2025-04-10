@@ -121,18 +121,8 @@ namespace FLIQC_controller_core {
         lcqp_solver.nVariables = nVariables;
         lcqp_solver.nConstraints = nContacts;
         lcqp_solver.nComplementarity = nContacts;
-        bool isSuccess = lcqp_solver.runSolver(lcqp_input, lcqp_output);
-
-        if (!isSuccess) {
-            // display an error, throw an exception
-            std::cout << "[ERROR] LCQP solver failed to find a solution." << std::endl;
-            WriteInputToFile(lcqp_input, "instance_1");
-            throw std::runtime_error("LCQP solver failed to find a solution.");
-        }
-
-        if (buffer_history) {
-            
-        }
+        
+        lcqp_solver.runSolver(lcqp_input, lcqp_output);
         
         Eigen::VectorXd result = lcqp_output.x.head(nJoint);
         return result;

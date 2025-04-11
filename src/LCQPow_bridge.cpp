@@ -1,6 +1,7 @@
 #include "FLIQC_controller_core/LCQPow_bridge.hpp"
 #include <memory>
 #include <LCQProblem.hpp>
+#include <filesystem>
 
 namespace FLIQC_controller_core{
     LCQPowException::LCQPowException(const LCQProblemInput& input, const LCQProblemOutput& output, const LCQProblemDebug& debug)
@@ -120,6 +121,71 @@ namespace FLIQC_controller_core{
             oss << "]";
         }
         return oss.str();
+    }
+
+    void logLCQPowExceptionAsFile(const LCQPowException& e, const std::string& base_path) {
+        // Create directories for logging
+        std::string input_dir = base_path + "/solver_input";
+        std::string output_dir = base_path + "/solver_output";
+        std::string options_dir = base_path + "/solver_options";
+        std::string statistics_dir = base_path + "/solver_statistics";
+        std::filesystem::create_directories(input_dir);
+        std::filesystem::create_directories(output_dir);
+        std::filesystem::create_directories(options_dir);
+        std::filesystem::create_directories(statistics_dir);
+
+        // Log input data
+        writeVariableAsCSV(input_dir, e.input.Q, "Q");
+        writeVariableAsCSV(input_dir, e.input.g, "g");
+        writeVariableAsCSV(input_dir, e.input.L, "L");
+        writeVariableAsCSV(input_dir, e.input.lbL, "lbL");
+        writeVariableAsCSV(input_dir, e.input.ubL, "ubL");
+        writeVariableAsCSV(input_dir, e.input.R, "R");
+        writeVariableAsCSV(input_dir, e.input.lbR, "lbR");
+        writeVariableAsCSV(input_dir, e.input.ubR, "ubR");
+        writeVariableAsCSV(input_dir, e.input.A, "A");
+        writeVariableAsCSV(input_dir, e.input.lbA, "lbA");
+        writeVariableAsCSV(input_dir, e.input.ubA, "ubA");
+        writeVariableAsCSV(input_dir, e.input.lb, "lb");
+        writeVariableAsCSV(input_dir, e.input.ub, "ub");
+        writeVariableAsCSV(input_dir, e.input.x0, "x0");
+        writeVariableAsCSV(input_dir, e.input.y0, "y0");
+
+        // Log output data
+        writeVariableAsCSV(output_dir, e.output.x, "x");
+        writeVariableAsCSV(output_dir, e.output.y, "y");
+
+        // Log options (each variable in a separate file)
+        writeVariableAsCSV(options_dir, e.debug.options.complementarityTolerance, "complementarityTolerance");
+        writeVariableAsCSV(options_dir, e.debug.options.stationarityTolerance, "stationarityTolerance");
+        writeVariableAsCSV(options_dir, e.debug.options.initialPenaltyParameter, "initialPenaltyParameter");
+        writeVariableAsCSV(options_dir, e.debug.options.penaltyUpdateFactor, "penaltyUpdateFactor");
+        writeVariableAsCSV(options_dir, e.debug.options.solveZeroPenaltyFirst, "solveZeroPenaltyFirst");
+        writeVariableAsCSV(options_dir, e.debug.options.perturbStep, "perturbStep");
+        writeVariableAsCSV(options_dir, e.debug.options.maxIterations, "maxIterations");
+        writeVariableAsCSV(options_dir, e.debug.options.maxPenaltyParameter, "maxPenaltyParameter");
+        writeVariableAsCSV(options_dir, e.debug.options.nDynamicPenalty, "nDynamicPenalty");
+        writeVariableAsCSV(options_dir, e.debug.options.etaDynamicPenalty, "etaDynamicPenalty");
+        writeVariableAsCSV(options_dir, e.debug.options.storeSteps, "storeSteps");
+
+        // Log statistics
+        writeVariableAsCSV(statistics_dir, e.debug.outputStatistics.xSteps, "xSteps");
+        writeVariableAsCSV(statistics_dir, e.debug.outputStatistics.innerIters, "innerIters");
+        writeVariableAsCSV(statistics_dir, e.debug.outputStatistics.subproblemIters, "subproblemIters");
+        writeVariableAsCSV(statistics_dir, e.debug.outputStatistics.accuSubproblemIters, "accuSubproblemIters");
+        writeVariableAsCSV(statistics_dir, e.debug.outputStatistics.stepLength, "stepLength");
+        writeVariableAsCSV(statistics_dir, e.debug.outputStatistics.stepSize, "stepSize");
+        writeVariableAsCSV(statistics_dir, e.debug.outputStatistics.statVals, "statVals");
+        writeVariableAsCSV(statistics_dir, e.debug.outputStatistics.objVals, "objVals");
+        writeVariableAsCSV(statistics_dir, e.debug.outputStatistics.phiVals, "phiVals");
+        writeVariableAsCSV(statistics_dir, e.debug.outputStatistics.meritVals, "meritVals");
+
+        // Log readable exception message
+        std::ofstream exception_file(base_path + "/exception_message.txt");
+        if (exception_file.is_open()) {
+            exception_file << e.what();
+            exception_file.close();
+        }
     }
 
     class LCQPow_bridge::LCQPow_impl{

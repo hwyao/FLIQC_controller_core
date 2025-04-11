@@ -2,9 +2,11 @@
 #define LCQPOW_BRIDGE_HPP_
 
 #include <memory>
-#include <Eigen/Dense>
-#include <exception>
 #include <string>
+#include <Eigen/Dense>
+#include <stdexcept>
+#include <fstream>
+#include <type_traits>
 
 namespace FLIQC_controller_core {
     /**
@@ -152,6 +154,58 @@ namespace FLIQC_controller_core {
          */
         std::string formatDoubleVector(const std::vector<std::vector<double>>& vec) const;
     };
+
+    /**
+     * @brief Write a variable to a CSV file.
+     * 
+     * @tparam T The type of the variable.
+     * @param base_path The base path for the CSV file.
+     * @param variable The variable to write.
+     * @param variable_name The name of the variable (used as the filename).
+     */
+    template <typename T>
+    void writeVariableAsCSV(const std::string& base_path, const T& variable, const std::string& variable_name) {
+        std::ofstream file(base_path + "/" + variable_name + ".csv");
+        if (!file.is_open()) {
+            throw std::runtime_error("Failed to open file: " + base_path + "/" + variable_name + ".csv");
+        }
+
+        if constexpr (std::is_arithmetic_v<T>) {
+            // Handle standard variables (double, bool, int, etc.)
+            file << variable;
+        } else if constexpr (std::is_base_of_v<Eigen::MatrixBase<T>, T>) {
+            // Handle all Eigen matrices and vectors using Eigen's format method
+            file << variable.format(Eigen::IOFormat(Eigen::StreamPrecision, Eigen::DontAlignCols, ",", "\n"));
+        } else if constexpr (std::is_same_v<T, std::vector<double>>) {
+            // Handle std::vector<double>
+            for (const auto& val : variable) {
+                file << val << "\n";
+            }
+        } else if constexpr (std::is_same_v<T, std::vector<std::vector<double>>>) {
+            // Handle std::vector<std::vector<double>>
+            for (const auto& row : variable) {
+                for (size_t i = 0; i < row.size(); ++i) {
+                    file << row[i];
+                    if (i < row.size() - 1) {
+                        file << ",";
+                    }
+                }
+                file << "\n";
+            }
+        } else {
+            throw std::runtime_error("Unsupported variable type for CSV export: " + variable_name + " as " + typeid(T).name());
+        }
+
+        file.close();
+    }
+
+    /**
+     * @brief Log the LCQPowException to a file.
+     * 
+     * @param e The LCQPowException to log.
+     * @param base_path The base path for the log file.
+     */
+    void logLCQPowExceptionAsFile(const LCQPowException& e, const std::string& base_path);
 
     class LCQPow_bridge {
     protected:

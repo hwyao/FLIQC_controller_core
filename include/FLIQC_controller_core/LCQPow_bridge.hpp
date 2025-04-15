@@ -6,6 +6,7 @@
 #include <Eigen/Dense>
 #include <stdexcept>
 #include <fstream>
+#include <iostream>
 #include <type_traits>
 
 namespace FLIQC_controller_core {
@@ -165,24 +166,34 @@ namespace FLIQC_controller_core {
      */
     template <typename T>
     void writeVariableAsCSV(const std::string& base_path, const T& variable, const std::string& variable_name) {
+        std::cout << "Starting to write variable: " << variable_name << " to CSV." << std::endl;
+
         std::ofstream file(base_path + "/" + variable_name + ".csv");
         if (!file.is_open()) {
             throw std::runtime_error("Failed to open file: " + base_path + "/" + variable_name + ".csv");
         }
 
         if constexpr (std::is_arithmetic_v<T>) {
-            // Handle standard variables (double, bool, int, etc.)
             file << variable;
         } else if constexpr (std::is_base_of_v<Eigen::MatrixBase<T>, T>) {
-            // Handle all Eigen matrices and vectors using Eigen's format method
-            file << variable.format(Eigen::IOFormat(Eigen::StreamPrecision, Eigen::DontAlignCols, ",", "\n"));
+            for (int i = 0; i < variable.rows(); ++i) {
+                for (int j = 0; j < variable.cols(); ++j) {
+                    file << variable(i, j);
+                    if (j < variable.cols() - 1) {
+                        file << ",";
+                    }
+                }
+                file << "\n";
+            }
         } else if constexpr (std::is_same_v<T, std::vector<double>>) {
-            // Handle std::vector<double>
+            for (const auto& val : variable) {
+                file << val << "\n";
+            }
+        } else if constexpr (std::is_same_v<T, std::vector<int>>) {
             for (const auto& val : variable) {
                 file << val << "\n";
             }
         } else if constexpr (std::is_same_v<T, std::vector<std::vector<double>>>) {
-            // Handle std::vector<std::vector<double>>
             for (const auto& row : variable) {
                 for (size_t i = 0; i < row.size(); ++i) {
                     file << row[i];

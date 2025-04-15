@@ -84,7 +84,9 @@ namespace FLIQC_controller_core{
 
     template <typename T>
     std::string LCQPowException::formatVector(const std::vector<T>& vec) const {
-        if (vec.size() > maxMatrixSize) {
+        if (vec.empty()) {
+            return "[empty]";
+        } else if (vec.size() > maxMatrixSize) {
             return "[" + std::to_string(vec.size()) + " elements]";
         } else {
             std::ostringstream oss;
@@ -99,13 +101,17 @@ namespace FLIQC_controller_core{
     }
 
     std::string LCQPowException::formatDoubleVector(const std::vector<std::vector<double>>& vec) const {
-        std::ostringstream oss;
-        if (vec.size() > maxMatrixSize) {
-            oss << "[" << vec.size() << " rows]";
+        if (vec.empty()) {
+            return "[empty]";
+        } else if (vec.size() > maxMatrixSize) {
+            return "[" + std::to_string(vec.size()) + " rows]";
         } else {
+            std::ostringstream oss;
             oss << "[\n";
             for (size_t i = 0; i < vec.size(); ++i) {
-                if (vec[i].size() > maxMatrixSize) {
+                if (vec[i].empty()) {
+                    oss << "  [empty]";
+                } else if (vec[i].size() > maxMatrixSize) {
                     oss << "  [" << vec[i].size() << " elements]";
                 } else {
                     oss << "  [";
@@ -119,12 +125,13 @@ namespace FLIQC_controller_core{
                 oss << "\n";
             }
             oss << "]";
+            return oss.str();
         }
-        return oss.str();
     }
 
     void logLCQPowExceptionAsFile(const LCQPowException& e, const std::string& base_path) {
         // Create directories for logging
+        std::cout<< "Start logging the data." << std::endl;
         std::string input_dir = base_path + "/solver_input";
         std::string output_dir = base_path + "/solver_output";
         std::string options_dir = base_path + "/solver_options";

@@ -73,7 +73,9 @@ namespace FLIQC_controller_core{
 
     template <typename MatrixType>
     std::string LCQPowException::formatMatrix(const MatrixType& matrix) const {
-        if (matrix.rows() > maxMatrixSize || matrix.cols() > maxMatrixSize) {
+        if (matrix.size() == 0) {
+            return "[empty]";
+        } else if (matrix.rows() > maxMatrixSize || matrix.cols() > maxMatrixSize) {
             return "[" + std::to_string(matrix.rows()) + "x" + std::to_string(matrix.cols()) + " Matrix]";
         } else {
             std::ostringstream oss;

@@ -12,7 +12,7 @@ namespace FLIQC_controller_core {
     }
 
     Eigen::VectorXd FLIQC_controller_joint_velocity_basic::runController(const Eigen::VectorXd& vel_guide, 
-                                                                         const FLIQC_cost_input& cost_input, 
+                                                                         const FLIQC_state_input& state_input, 
                                                                          const std::vector<FLIQC_distance_input> &dist_inputs) {
         // filter out the active distance inputs: if the distance is less than the active threshold, then it is active
         std::vector<FLIQC_distance_input> active_dist_inputs;
@@ -26,17 +26,32 @@ namespace FLIQC_controller_core {
             // no active distance inputs, return the guide velocity
             return vel_guide;
         }
-
         int nContacts = active_dist_inputs.size();
         int nVariables = nJoint + nContacts;
 
         // construct the input of the LCQProblem: [0] The cost input
+        Eigen::MatrixXd quad_cost;
+        if (quad_cost_type == FLIQC_QUAD_COST_IDENTITY) {
+            quad_cost = Eigen::MatrixXd::Identity(nJoint, nJoint);
+        } else if (quad_cost_type == FLIQC_QUAD_COST_MASS_MATRIX) {
+            quad_cost = state_input.M;
+        } else {
+            throw std::invalid_argument("The type of the cost function" + std::to_string(quad_cost_type) + " is not supported.");
+        }
+
         lcqp_input.Q = Eigen::MatrixXd::Zero(nVariables, nVariables);
-        lcqp_input.Q << cost_input.Q,                              Eigen::MatrixXd::Zero(nJoint, nContacts),
-                        Eigen::MatrixXd::Zero(nContacts, nJoint),  Eigen::MatrixXd::Identity(nContacts, nContacts);
+        lcqp_input.Q << quad_cost,                                 Eigen::MatrixXd::Zero(nJoint, nContacts),
+                        Eigen::MatrixXd::Zero(nContacts, nJoint),  Eigen::MatrixXd::Identity(nContacts, nContacts) * lambda_cost_penalty;
+        
+        Eigen::VectorXd lin_cost;
+        if (linear_cost_type == FLIQC_LINEAR_COST_NONE) {
+            lin_cost = Eigen::VectorXd::Zero(nJoint);
+        } else {
+            throw std::invalid_argument("The type of the linear cost function " + std::to_string(linear_cost_type) + " is not supported.");
+        }
 
         lcqp_input.g = Eigen::VectorXd::Zero(nVariables);
-        lcqp_input.g << cost_input.g, Eigen::VectorXd::Zero(nContacts);
+        lcqp_input.g << lin_cost, Eigen::VectorXd::Zero(nContacts);
         
         // construct the input of the LCQProblem: [1] all the close-constant input.
         lcqp_input.L = Eigen::MatrixXd::Zero(nContacts, nVariables);
@@ -73,6 +88,13 @@ namespace FLIQC_controller_core {
         }
 
         // construct the input of the LCQProblem: [2] all the distance-dependent input.
+        Eigen::MatrixXd nullspace_projector;
+        if (enable_nullspace_projector_in_A) {
+            Eigen::MatrixXd Jpos = state_input.J.block(0, 0, 3, nJoint);
+            nullspace_projector = Eigen::MatrixXd::Identity(nJoint, nJoint) - Jpos.completeOrthogonalDecomposition().pseudoInverse() * Jpos;
+        } else {
+            nullspace_projector = Eigen::MatrixXd::Identity(nJoint, nJoint);
+        }
         for (int i = 0; i < active_dist_inputs.size(); i++) {
             // lbR
             lcqp_input.lbR(i) = -active_dist_inputs[i].distance + eps;
@@ -80,24 +102,20 @@ namespace FLIQC_controller_core {
             lcqp_input.R.block(i, 0, 1, nJoint) = dt * active_dist_inputs[i].projector_control_to_dist;
             // A
             if(active_dist_inputs[i].projector_dist_to_control.size() != 0){
-                lcqp_input.A.block(0, nJoint + i, nJoint, 1) = active_dist_inputs[i].projector_dist_to_control;
+                lcqp_input.A.block(0, nJoint + i, nJoint, 1) = - nullspace_projector 
+                    * active_dist_inputs[i].projector_dist_to_control;
             }
             else{
                 // This is then the pseudo-inverse of the projector_control_to_dist vector
-                lcqp_input.A.block(0, nJoint + i, nJoint, 1) = 
-                - active_dist_inputs[i].projector_control_to_dist.transpose() * 
-                ((active_dist_inputs[i].projector_control_to_dist * active_dist_inputs[i].projector_control_to_dist.transpose()).inverse());
+                lcqp_input.A.block(0, nJoint + i, nJoint, 1) = - nullspace_projector 
+                    * (1.0 / active_dist_inputs[i].projector_control_to_dist.norm()) 
+                    * active_dist_inputs[i].projector_control_to_dist.transpose();
             }
         }
 
         // construct the input of the LCQProblem: [3] initial guess
-        if (buffer_history) {
-            
-        }
-        else{
-            lcqp_input.x0.resize(0);
-            lcqp_input.y0.resize(0);
-        }
+        lcqp_input.x0.resize(0);
+        lcqp_input.y0.resize(0);
 
         #ifdef CONTROLLER_DEBUG
             // print the input of the LCQP

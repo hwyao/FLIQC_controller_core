@@ -8,9 +8,18 @@
 #include "FLIQC_controller_core/LCQPow_bridge.hpp"
 
 namespace FLIQC_controller_core {
-    struct FLIQC_cost_input{
-        Eigen::MatrixXd Q;      ///< The cost matrix for the optimization problem
-        Eigen::VectorXd g;      ///< The cost vector for the optimization problem
+    struct FLIQC_state_input{
+        Eigen::MatrixXd M;      ///< The mass matrix for the current optimization problem
+        Eigen::MatrixXd J;      ///< The Jacobian matrix for the current optimization problem
+    };
+
+    enum FLIQC_quad_cost_type{
+        FLIQC_QUAD_COST_IDENTITY,        ///< The cost is the identity matrix
+        FLIQC_QUAD_COST_MASS_MATRIX      ///< The cost is the mass matrix
+    };
+
+    enum FLIQC_linear_cost_type{
+        FLIQC_LINEAR_COST_NONE            ///< No linear cost
     };
     
     /**
@@ -48,16 +57,24 @@ namespace FLIQC_controller_core {
      *                       minimize    1/2 * x' * [{Q} 0] * x + x' * [g]  
      *                                              [0 {I}]            [0]
      *                           s.t.        0 = x' * L' * R * x
-     *                        0       <=          [{0}, {I}] x           <=   lambda_max              (L)
+     *                        0       <=          [{0}, {I}] x             <=   lambda_max              (L)
      *     [-phi_1;...;-phi_i] + eps  <=    [{dt*P_1;...;dt*P_i}; {0}] x   <=  escape_velocity_max      (R) 
-     *                   q_dot_guide  <=  [{I}, -Pinv_1, ..., -Pinv_i] x <=   q_dot_guide             (A)
-     *               [-q_dot_min; 0]  <=               x                 <= [q_dot_max; lambda_max]  
+     *                   q_dot_guide  <=  [{I}, -Pinv_1, ..., -Pinv_i] x   <=   q_dot_guide             (A)
+     *               [-q_dot_min; 0]  <=               x                   <= [q_dot_max; lambda_max]  
      * 
-     *  There are several options for the controller:
+     *  There are several options for the cost function:
+     *  1. quad_cost_type: the type of the quadratic cost function. 
+     *      Option 0: the cost is the identity matrix.
+     *      Option 1: the cost is the mass matrix.
+     *  2. linear_cost_type: the type of the linear cost function. Currently not used.
+     *  3. lambda_cost_penalty: the penalty for the lambda constraint in the optimization problem.
+     * 
+     *  There are several options for the controller constraint formulation:
      *  1. buffer_history: buffer the last solution as initial guess for the next run
      *  2. enable_lambda_constraint_in_L: enable the lambda constraint in left complementarity constraint (L matrix)
      *  3. enable_lambda_constraint_in_x: enable the lambda constraint in the optimization variable x
      *  4. enable_esc_vel_constraint: enable the escape velocity constraint in right complementarity constraint (R matrix)
+     *  5. enable_nullspace_projector_in_A: enable the nullspace projector in the A matrix, to allow maximum avoid with nullspace motion
      * 
      *  There are several parameters for the controller:
      *  1. dt: the forward step for the optimization prediction in right complementarity constraint (dt in R matrix)
@@ -86,20 +103,27 @@ namespace FLIQC_controller_core {
          * @brief Run the controller
          * 
          * @param vel_guide The joint velocity guide for the controller, this is the velocity that the controller would like to follow
-         * @param cost_input The cost input for the optimization problem
+         * @param state_input The cost input for the optimization problem
          * @param dist_inputs the input of the controller, which is the sensory signals to obstacles
          * @return Eigen::VectorXd The result control variable
          */
-        Eigen::VectorXd runController(const Eigen::VectorXd& vel_guide, const FLIQC_cost_input& cost_input, const std::vector<FLIQC_distance_input> &dist_inputs);
+        Eigen::VectorXd runController(const Eigen::VectorXd& vel_guide, const FLIQC_state_input& state_input, const std::vector<FLIQC_distance_input> &dist_inputs);
 
-        bool buffer_history = false;                ///< Buffer the last solution as initial guess for the next run
+        // cost configurations
+        FLIQC_quad_cost_type quad_cost_type = FLIQC_QUAD_COST_IDENTITY;   ///< The type of the cost function, either identity or mass matrix
+        FLIQC_linear_cost_type linear_cost_type = FLIQC_LINEAR_COST_NONE; ///< The type of the linear cost function, currently not used
+        double lambda_cost_penalty = 1.0;                                 ///< The penalty for the lambda constraint in the optimization problem
+
+        // constraint formulation configurations
         bool enable_lambda_constraint_in_L = false; ///< Enable the lambda constraint in left complementarity constraint
         bool enable_lambda_constraint_in_x = true;  ///< Enable the lambda constraint in the optimization variable x
         bool enable_esc_vel_constraint = false;     ///< Enable the escape velocity constraint in right complementarity constraint
+        bool enable_nullspace_projector_in_A = true;   ///< Enable the nullspace projector in the A matrix
 
+        // parameters configurations
         double dt = 0.02;                     ///< The forward step for the optimization prediction in right complementarity constraint
-        double eps = 0.01;                    ///< The safety margin for the forward step prediction in right complementarity constraint
-        double active_threshold = 0.03;       ///< The active tolerance for considering the distance as active
+        double eps = 0.02;                    ///< The safety margin for the forward step prediction in right complementarity constraint
+        double active_threshold = 0.05;       ///< The active tolerance for considering the distance as active
         double lambda_max = std::numeric_limits<double>::max();     ///< The maximum lambda value
         double esc_vel_max = std::numeric_limits<double>::max();    ///< The maximum escape velocity calculated in R
         Eigen::VectorXd q_dot_max;            ///< The maximum joint velocity
@@ -111,9 +135,6 @@ namespace FLIQC_controller_core {
 
         LCQProblemInput lcqp_input;                          ///< The input of the LCQProblem
         LCQProblemOutput lcqp_output;                        ///< The output of the LCQProblem
-
-        std::unordered_map<int, double> history_solution_x;  ///< The history of the primary solution x
-        std::unordered_map<int, double> history_solution_y;  ///< The history of the dual solution y
     };
 }
 

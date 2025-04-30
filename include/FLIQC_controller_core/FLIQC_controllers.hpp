@@ -14,8 +14,9 @@ namespace FLIQC_controller_core {
     };
 
     enum FLIQC_quad_cost_type{
-        FLIQC_QUAD_COST_IDENTITY,        ///< The cost is the identity matrix
-        FLIQC_QUAD_COST_MASS_MATRIX      ///< The cost is the mass matrix
+        FLIQC_QUAD_COST_IDENTITY,               ///< The cost is the identity matrix
+        FLIQC_QUAD_COST_JOINT_VELOCITY_ERROR,   ///< The cost is the joint velocity error
+        FLIQC_QUAD_COST_MASS_MATRIX             ///< The cost is the mass matrix
     };
 
     enum FLIQC_linear_cost_type{

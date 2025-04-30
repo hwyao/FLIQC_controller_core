@@ -30,25 +30,28 @@ namespace FLIQC_controller_core {
         int nVariables = nJoint + nContacts;
 
         // construct the input of the LCQProblem: [0] The cost input
-        Eigen::MatrixXd quad_cost;
+        Eigen::MatrixXd quad_cost = Eigen::MatrixXd::Identity(nJoint, nJoint);
+        Eigen::VectorXd lin_cost = Eigen::VectorXd::Zero(nJoint);
         if (quad_cost_type == FLIQC_QUAD_COST_IDENTITY) {
-            quad_cost = Eigen::MatrixXd::Identity(nJoint, nJoint);
+            //quad_cost = Eigen::MatrixXd::Identity(nJoint, nJoint);  // already set
+        } else if (quad_cost_type == FLIQC_QUAD_COST_JOINT_VELOCITY_ERROR){
+            //quad_cost = Eigen::MatrixXd::Identity(nJoint, nJoint);  // already set
+            lin_cost = - 2 * vel_guide;
         } else if (quad_cost_type == FLIQC_QUAD_COST_MASS_MATRIX) {
             quad_cost = state_input.M;
         } else {
             throw std::invalid_argument("The type of the cost function" + std::to_string(quad_cost_type) + " is not supported.");
         }
 
-        lcqp_input.Q = Eigen::MatrixXd::Zero(nVariables, nVariables);
-        lcqp_input.Q << quad_cost,                                 Eigen::MatrixXd::Zero(nJoint, nContacts),
-                        Eigen::MatrixXd::Zero(nContacts, nJoint),  Eigen::MatrixXd::Identity(nContacts, nContacts) * lambda_cost_penalty;
-        
-        Eigen::VectorXd lin_cost;
         if (linear_cost_type == FLIQC_LINEAR_COST_NONE) {
-            lin_cost = Eigen::VectorXd::Zero(nJoint);
+            //lin_cost += Eigen::VectorXd::Zero(nJoint);              // do nothing
         } else {
             throw std::invalid_argument("The type of the linear cost function " + std::to_string(linear_cost_type) + " is not supported.");
         }
+
+        lcqp_input.Q = Eigen::MatrixXd::Zero(nVariables, nVariables);
+        lcqp_input.Q << quad_cost,                                 Eigen::MatrixXd::Zero(nJoint, nContacts),
+                        Eigen::MatrixXd::Zero(nContacts, nJoint),  Eigen::MatrixXd::Identity(nContacts, nContacts) * lambda_cost_penalty;
 
         lcqp_input.g = Eigen::VectorXd::Zero(nVariables);
         lcqp_input.g << lin_cost, Eigen::VectorXd::Zero(nContacts);

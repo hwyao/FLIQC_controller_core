@@ -91,7 +91,7 @@ namespace FLIQC_controller_core {
         Eigen::MatrixXd nullspace_projector;
         if (enable_nullspace_projector_in_A) {
             Eigen::MatrixXd Jpos = state_input.J.block(0, 0, 3, nJoint);
-            nullspace_projector = Eigen::MatrixXd::Identity(nJoint, nJoint) - Jpos.completeOrthogonalDecomposition().pseudoInverse() * Jpos;
+            nullspace_projector = Eigen::MatrixXd::Identity(nJoint, nJoint) - Jpos.jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(Jpos);
         } else {
             nullspace_projector = Eigen::MatrixXd::Identity(nJoint, nJoint);
         }

@@ -14,9 +14,10 @@ namespace FLIQC_controller_core {
     };
 
     enum FLIQC_quad_cost_type{
-        FLIQC_QUAD_COST_IDENTITY,               ///< The cost is the identity matrix
-        FLIQC_QUAD_COST_JOINT_VELOCITY_ERROR,   ///< The cost is the joint velocity error
-        FLIQC_QUAD_COST_MASS_MATRIX             ///< The cost is the mass matrix
+        FLIQC_QUAD_COST_IDENTITY,                       ///< The cost is the identity matrix
+        FLIQC_QUAD_COST_JOINT_VELOCITY_ERROR,           ///< The cost is the joint velocity error
+        FLIQC_QUAD_COST_MASS_MATRIX,                    ///< The cost is the mass matrix
+        FLIQC_QUAD_COST_MASS_MATRIX_VELOCITY_ERROR      ///< The cost is the error weighted in the mass matrix
     };
 
     enum FLIQC_linear_cost_type{
@@ -127,7 +128,8 @@ namespace FLIQC_controller_core {
         double active_threshold = 0.05;       ///< The active tolerance for considering the distance as active
         double lambda_max = std::numeric_limits<double>::max();     ///< The maximum lambda value
         double esc_vel_max = std::numeric_limits<double>::max();    ///< The maximum escape velocity calculated in R
-        Eigen::VectorXd q_dot_max;            ///< The maximum joint velocity
+        Eigen::VectorXd q_dot_max;             ///< The maximum joint velocity
+        Eigen::VectorXd weight_on_mass_matrix; ///< The weight on the mass matrix, this is used to scale the mass matrix to the same scale as the other cost function
 
         LCQPow_bridge lcqp_solver;            ///< The solver for the optimization problem
 

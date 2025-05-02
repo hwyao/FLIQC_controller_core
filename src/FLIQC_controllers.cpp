@@ -30,15 +30,19 @@ namespace FLIQC_controller_core {
         int nVariables = nJoint + nContacts;
 
         // construct the input of the LCQProblem: [0] The cost input
-        Eigen::MatrixXd quad_cost = Eigen::MatrixXd::Identity(nJoint, nJoint);
+        Eigen::MatrixXd quad_cost = Eigen::MatrixXd::Zero(nJoint, nJoint);
         Eigen::VectorXd lin_cost = Eigen::VectorXd::Zero(nJoint);
         if (quad_cost_type == FLIQC_QUAD_COST_IDENTITY) {
-            //quad_cost = Eigen::MatrixXd::Identity(nJoint, nJoint);  // already set
+            quad_cost += Eigen::MatrixXd::Identity(nJoint, nJoint);
         } else if (quad_cost_type == FLIQC_QUAD_COST_JOINT_VELOCITY_ERROR){
-            //quad_cost = Eigen::MatrixXd::Identity(nJoint, nJoint);  // already set
-            lin_cost = - 2 * vel_guide;
+            quad_cost += Eigen::MatrixXd::Identity(nJoint, nJoint);
+            lin_cost  += -2 * vel_guide;
         } else if (quad_cost_type == FLIQC_QUAD_COST_MASS_MATRIX) {
-            quad_cost = state_input.M;
+            quad_cost += state_input.M;
+        } else if (quad_cost_type == FLIQC_QUAD_COST_MASS_MATRIX_VELOCITY_ERROR) {
+            Eigen::MatrixXd W = weight_on_mass_matrix.asDiagonal();
+            quad_cost += W * state_input.M;
+            lin_cost  += -2 * W * state_input.M * vel_guide;
         } else {
             throw std::invalid_argument("The type of the cost function" + std::to_string(quad_cost_type) + " is not supported.");
         }

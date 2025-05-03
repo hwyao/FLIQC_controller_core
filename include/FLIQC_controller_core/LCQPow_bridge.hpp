@@ -124,7 +124,7 @@ namespace FLIQC_controller_core {
          */
         const char* what() const noexcept override;
 
-    private:
+    protected:
         std::string message; //< The formatted exception message.
 
         /**

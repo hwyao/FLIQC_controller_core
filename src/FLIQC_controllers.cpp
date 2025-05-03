@@ -11,9 +11,9 @@ namespace FLIQC_controller_core {
         // nothing to do here
     }
 
-    Eigen::VectorXd FLIQC_controller_joint_velocity_basic::runController(const Eigen::VectorXd& vel_guide, 
-                                                                         const FLIQC_state_input& state_input, 
-                                                                         const std::vector<FLIQC_distance_input> &dist_inputs) {
+    Eigen::VectorXd FLIQC_controller_joint_velocity_basic::runController(const FLIQC_state_input& state_input, 
+                                                                         const std::vector<FLIQC_distance_input> &dist_inputs,
+                                                                               FLIQC_control_output& control_output) {
         // filter out the active distance inputs: if the distance is less than the active threshold, then it is active
         std::vector<FLIQC_distance_input> active_dist_inputs;
         for (auto dist_input_i : dist_inputs) {
@@ -24,7 +24,7 @@ namespace FLIQC_controller_core {
 
         if (active_dist_inputs.size() == 0) {
             // no active distance inputs, return the guide velocity
-            return vel_guide;
+            return state_input.q_dot_guide;
         }
         int nContacts = active_dist_inputs.size();
         int nVariables = nJoint + nContacts;
@@ -36,13 +36,13 @@ namespace FLIQC_controller_core {
             quad_cost += Eigen::MatrixXd::Identity(nJoint, nJoint);
         } else if (quad_cost_type == FLIQC_QUAD_COST_JOINT_VELOCITY_ERROR){
             quad_cost += Eigen::MatrixXd::Identity(nJoint, nJoint);
-            lin_cost  += -2 * vel_guide;
+            lin_cost  += -2 * state_input.q_dot_guide;
         } else if (quad_cost_type == FLIQC_QUAD_COST_MASS_MATRIX) {
             quad_cost += state_input.M;
         } else if (quad_cost_type == FLIQC_QUAD_COST_MASS_MATRIX_VELOCITY_ERROR) {
             Eigen::MatrixXd W = weight_on_mass_matrix.asDiagonal();
             quad_cost += W * state_input.M;
-            lin_cost  += -2 * W * state_input.M * vel_guide;
+            lin_cost  += -2 * W * state_input.M * state_input.q_dot_guide;
         } else {
             throw std::invalid_argument("The type of the cost function" + std::to_string(quad_cost_type) + " is not supported.");
         }
@@ -76,8 +76,8 @@ namespace FLIQC_controller_core {
 
         lcqp_input.A = Eigen::MatrixXd::Zero(nJoint, nVariables);
         lcqp_input.A.block(0, 0, nJoint, nJoint) = Eigen::MatrixXd::Identity(nJoint, nJoint);
-        lcqp_input.lbA = vel_guide;
-        lcqp_input.ubA = vel_guide;
+        lcqp_input.lbA = state_input.q_dot_guide;
+        lcqp_input.ubA = state_input.q_dot_guide;
 
         lcqp_input.lb = Eigen::VectorXd::Zero(nVariables);
         lcqp_input.ub = Eigen::VectorXd::Constant(nVariables, std::numeric_limits<double>::max());
@@ -123,31 +123,14 @@ namespace FLIQC_controller_core {
         // construct the input of the LCQProblem: [3] initial guess
         lcqp_input.x0.resize(0);
         lcqp_input.y0.resize(0);
-
-        #ifdef CONTROLLER_DEBUG
-            // print the input of the LCQP
-            std::cout << "Q: " << std::endl << lcqp_input.Q << std::endl;
-            std::cout << "g: " << std::endl << lcqp_input.g << std::endl;
-            std::cout << "L: " << std::endl << lcqp_input.L << std::endl;
-            std::cout << "lbL: " << std::endl << lcqp_input.lbL << std::endl;
-            std::cout << "ubL: " << std::endl << lcqp_input.ubL << std::endl;
-            std::cout << "R: " << std::endl << lcqp_input.R << std::endl;
-            std::cout << "lbR: " << std::endl << lcqp_input.lbR << std::endl;
-            std::cout << "ubR: " << std::endl << lcqp_input.ubR << std::endl;
-            std::cout << "A: " << std::endl << lcqp_input.A << std::endl;
-            std::cout << "lbA: " << std::endl << lcqp_input.lbA << std::endl;
-            std::cout << "ubA: " << std::endl << lcqp_input.ubA << std::endl;
-            std::cout << "lb: " << std::endl << lcqp_input.lb << std::endl;
-            std::cout << "ub: " << std::endl << lcqp_input.ub << std::endl;
-            std::cout << "x0: " << std::endl << lcqp_input.x0 << std::endl;
-            std::cout << "y0: " << std::endl << lcqp_input.y0 << std::endl;
-        #endif // CONTROLLER_DEBUG
         
         lcqp_solver.nVariables = nVariables;
         lcqp_solver.nConstraints = nContacts;
         lcqp_solver.nComplementarity = nContacts;
         
         lcqp_solver.runSolver(lcqp_input, lcqp_output);
+        control_output.x = lcqp_output.x;
+        control_output.y = lcqp_output.y;
         
         Eigen::VectorXd result = lcqp_output.x.head(nJoint);
         return result;

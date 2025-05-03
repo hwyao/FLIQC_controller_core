@@ -89,11 +89,6 @@ target_link_libraries(FLIQC_controller_core PUBLIC
   qpOASES_lib
   Eigen3::Eigen
 )
-if (FLIQC_DEBUG_MODE)
-  target_compile_definitions(FLIQC_controller_core PUBLIC 
-    CONTROLLER_DEBUG
-  )
-endif()
 
 # add the executable
 if (FLIQC_BUILD_EXAMPLE)

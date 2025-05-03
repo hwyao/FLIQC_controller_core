@@ -8,11 +8,6 @@
 #include "FLIQC_controller_core/LCQPow_bridge.hpp"
 
 namespace FLIQC_controller_core {
-    struct FLIQC_state_input{
-        Eigen::MatrixXd M;      ///< The mass matrix for the current optimization problem
-        Eigen::MatrixXd J;      ///< The Jacobian matrix for the current optimization problem
-    };
-
     enum FLIQC_quad_cost_type{
         FLIQC_QUAD_COST_IDENTITY,                       ///< The cost is the identity matrix
         FLIQC_QUAD_COST_JOINT_VELOCITY_ERROR,           ///< The cost is the joint velocity error
@@ -33,6 +28,17 @@ namespace FLIQC_controller_core {
         double distance;                                ///< The distance to the obstacle
         Eigen::RowVectorXd projector_control_to_dist;   ///< The projector from control space velocity to the distance velocity
         Eigen::VectorXd projector_dist_to_control;      ///< The projector from distance to control space, leave empty to use pseudo-inverse of projector_control_to_dist
+    };
+
+    struct FLIQC_state_input{
+        Eigen::VectorXd q_dot_guide; ///< The joint velocity guide for the controller
+        Eigen::MatrixXd M;           ///< The mass matrix for the current optimization problem
+        Eigen::MatrixXd J;           ///< The Jacobian matrix for the current optimization problem
+    };
+
+    struct FLIQC_control_output{
+        Eigen::VectorXd x;           ///< The x output of the optimization problem
+        Eigen::VectorXd y;           ///< The y output of the optimization problem
     };
 
     /**
@@ -104,12 +110,14 @@ namespace FLIQC_controller_core {
         /**
          * @brief Run the controller
          * 
-         * @param vel_guide The joint velocity guide for the controller, this is the velocity that the controller would like to follow
          * @param state_input The cost input for the optimization problem
          * @param dist_inputs the input of the controller, which is the sensory signals to obstacles
+         * @param control_output The output of the controller, which is the full solution of the optimization problem
          * @return Eigen::VectorXd The result control variable
          */
-        Eigen::VectorXd runController(const Eigen::VectorXd& vel_guide, const FLIQC_state_input& state_input, const std::vector<FLIQC_distance_input> &dist_inputs);
+        Eigen::VectorXd runController(const FLIQC_state_input& state_input, 
+                                      const std::vector<FLIQC_distance_input> &dist_inputs,
+                                            FLIQC_control_output& control_output);
 
         // cost configurations
         FLIQC_quad_cost_type quad_cost_type = FLIQC_QUAD_COST_IDENTITY;   ///< The type of the cost function, either identity or mass matrix

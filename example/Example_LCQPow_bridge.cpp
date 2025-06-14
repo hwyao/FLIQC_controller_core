@@ -1,3 +1,7 @@
+/**
+ * @example Example_LCQPow_bridge.cpp
+ * @brief Example of using the LCQPow_bridge to solve a linear complementarity problem.
+ */
 #include<FLIQC_controller_core/LCQPow_bridge.hpp>
 #include<cmath>
 #include<iostream>

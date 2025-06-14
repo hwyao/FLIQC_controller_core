@@ -19,7 +19,10 @@
  *	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-
+/**
+ * @example Example_LCQPow.cpp
+ * @brief Example of using the LCQPow library to solve a linear complementarity problem.
+ */
 #include <iostream>
 #include "LCQProblem.hpp"
 

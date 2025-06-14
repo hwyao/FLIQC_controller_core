@@ -1,3 +1,7 @@
+/**
+ * @file LCQPow_bridge.cpp
+ * @brief Implementation of the LCQPow_bridge class.
+ */
 #include "FLIQC_controller_core/LCQPow_bridge.hpp"
 #include <memory>
 #include <LCQProblem.hpp>
@@ -197,6 +201,12 @@ namespace FLIQC_controller_core{
         }
     }
 
+    /**
+     * @brief Implementation of the LCQPow_bridge class.
+     * 
+     * This class uses PIMPL idiom to hide the implementation details of the LCQPow solver.
+     * It contains a unique pointer LCQPow solver and options.
+     */
     class LCQPow_bridge::LCQPow_impl{
     public:
         std::unique_ptr<LCQPow::LCQProblem> lcqp;

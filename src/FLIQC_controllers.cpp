@@ -1,3 +1,7 @@
+/**
+ * @file FLIQC_controllers.cpp
+ * @brief Implementation of the FLIQC controller classes.
+ */
 #include "FLIQC_controller_core/FLIQC_controllers.hpp"
 #include <stdexcept>
 #include <iostream>

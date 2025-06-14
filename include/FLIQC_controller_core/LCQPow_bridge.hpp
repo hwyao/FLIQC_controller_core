@@ -1,3 +1,8 @@
+/**
+ * @file LCQPow_bridge.hpp
+ * @brief The header file for bridge to LCQPow library
+ * For detail implementation, please refer to the <a href="https://github.com/nosnoc/LCQPow">LCQPow library</a>.
+ */
 #ifndef LCQPOW_BRIDGE_HPP_
 #define LCQPOW_BRIDGE_HPP_
 
@@ -17,12 +22,16 @@ namespace FLIQC_controller_core {
      *  LCQPow is intended for solving quadratic programs with
      *  linear complementarity constraints of the form
      * 
-     *          minimize   1/2*x'Qx + x'g
-     *             s.t.    0  = x'*L'*R*x
-     *                 lbL <= L*x <= ubL
-     *                 lbR <= R*x <= ubR
-     *                 lbA <=  Ax  <= ubA     {optional}
-     *                  lb <=   x  <= ub      {optional}
+     *    \f[
+     *    \begin{aligned}
+     *    &\min_{\boldsymbol{x}} \quad \frac{1}{2} \boldsymbol{x}^\top \boldsymbol{Q} \boldsymbol{x} + \boldsymbol{x}^\top \boldsymbol{g} \\
+     *    &\text{s.t.} \quad 0 = \boldsymbol{x}^\top \boldsymbol{L}^\top \boldsymbol{R} \boldsymbol{x} \\
+     *    &\qquad \boldsymbol{lb}_L \leq \boldsymbol{L} \boldsymbol{x} \leq \boldsymbol{ub}_L \\
+     *    &\qquad \boldsymbol{lb}_R \leq \boldsymbol{R} \boldsymbol{x} \leq \boldsymbol{ub}_R \\
+     *    &\qquad \boldsymbol{lb}_A \leq \boldsymbol{A} \boldsymbol{x} \leq \boldsymbol{ub}_A \quad \text{(optional)} \\
+     *    &\qquad \boldsymbol{lb} \leq \boldsymbol{x} \leq \boldsymbol{ub} \qquad \quad \text{(optional)}
+     *    \end{aligned}
+     *    \f]
      * 
      */
     struct LCQProblemInput {
@@ -111,15 +120,16 @@ namespace FLIQC_controller_core {
         /**
          * @brief Construct a new LCQPowException object.
          * 
-         * @param input The input of the LCQProblem.
-         * @param output The output of the LCQProblem.
-         * @param debug The debug statistics of the LCQProblem.
+         * @param[in] input The input of the LCQProblem.
+         * @param[in] output The output of the LCQProblem.
+         * @param[in] debug The debug statistics of the LCQProblem.
          */
         LCQPowException(const LCQProblemInput& input, const LCQProblemOutput& output, const LCQProblemDebug& debug);
 
         /**
          * @brief Get the exception message.
-         * 
+         * This will format the input, output, and debug statistics into a human-readable string. If
+         * the matrix or vector sizes exceed the maximum size, it will truncate the output.
          * @return const char* The exception message.
          */
         const char* what() const noexcept override;
@@ -131,7 +141,7 @@ namespace FLIQC_controller_core {
          * @brief Format a matrix for output.
          * 
          * @tparam MatrixType The type of the matrix.
-         * @param matrix The matrix to format.
+         * @param[in] matrix The matrix to format.
          * @return std::string The formatted matrix as a string.
          */
         template <typename MatrixType>
@@ -141,7 +151,7 @@ namespace FLIQC_controller_core {
          * @brief Format a vector for output.
          * 
          * @tparam T The type of the vector elements.
-         * @param vec The vector to format.
+         * @param[in] vec The vector to format.
          * @return std::string The formatted vector as a string.
          */
         template <typename T>
@@ -150,7 +160,7 @@ namespace FLIQC_controller_core {
         /**
          * @brief Declaration of specialization of formatVector for vectors of vectors of doubles.
          * 
-         * @param vec The vector of vectors of doubles to format.
+         * @param[in] vec The vector of vectors of doubles to format.
          * @return std::string The formatted vector of vectors as a string.
          */
         std::string formatDoubleVector(const std::vector<std::vector<double>>& vec) const;
@@ -160,9 +170,9 @@ namespace FLIQC_controller_core {
      * @brief Write a variable to a CSV file.
      * 
      * @tparam T The type of the variable.
-     * @param base_path The base path for the CSV file.
-     * @param variable The variable to write.
-     * @param variable_name The name of the variable (used as the filename).
+     * @param[in] base_path The base path for the CSV file.
+     * @param[in] variable The variable to write.
+     * @param[in] variable_name The name of the variable (used as the filename).
      */
     template <typename T>
     void writeVariableAsCSV(const std::string& base_path, const T& variable, const std::string& variable_name) {
@@ -213,11 +223,26 @@ namespace FLIQC_controller_core {
     /**
      * @brief Log the LCQPowException to a file.
      * 
-     * @param e The LCQPowException to log.
-     * @param base_path The base path for the log file.
+     * @param[in] e The LCQPowException to log.
+     * @param[in] base_path The base path for the log file.
      */
     void logLCQPowExceptionAsFile(const LCQPowException& e, const std::string& base_path);
 
+    /**
+     * @brief A bridge class to the LCQPow library.
+     * 
+     * This class provides an interface to the LCQPow library for solving
+     * linear complementarity quadratic programming (LCQP) problems.
+     * 
+     * This class encapsulates the LCQPow implementation and provides methods to
+     * update options, run the solver, and retrieve debug statistics.
+     * 
+     * After initializing the LCQPow_bridge object, you can set several options
+     * and need to call updateOptions() before running the solver if you change
+     * some of the options. 
+     * 
+     * Then you can call runSolver() with input to retrieve the output. 
+     */
     class LCQPow_bridge {
     protected:
         /**
@@ -227,7 +252,7 @@ namespace FLIQC_controller_core {
         class LCQPow_impl;
 
         /**
-         * @brief The deleter for the pimplData
+         * @brief The deleter for LCQPow_impl
          * 
          */
         struct LCQPow_impl_deleter {               
@@ -256,27 +281,27 @@ namespace FLIQC_controller_core {
          * @brief update the options for the solver. Call this when you change the option attributes.
          * 
          * Options that could be initialized one time and used in each run (which needs updateOptions): 
-         * stationarityTolerance, complementarityTolerance, initialPenaltyParameter, penaltyUpdateFactor
+         * #stationarityTolerance, #complementarityTolerance, #initialPenaltyParameter, #penaltyUpdateFactor
          * 
          * Options that will be initialized in each run (Which doesn't need updateOptions):
-         * nVariables, nConstraints, nComplementarity
+         * #nVariables, #nConstraints, #nComplementarity
          */
         void updateOptions(void);
 
-        double stationarityTolerance = 1.0e-3;       //< Stationarity tolerance, tolerance for optimization
-        double complementarityTolerance = 1.0e-3;            //< Complementarity tolerance, tolerance for complementarity vertical constraint
-        double initialPenaltyParameter = 0.01;      //< Initial penalty parameter, initial penalty parameter for complementarity
-        double penaltyUpdateFactor = 2.0;           //< Penalty update factor, factor for updating penaltised complementarity term
-        int nVariables;               //< Number of variables
-        int nConstraints;             //< Number of constraints
-        int nComplementarity;         //< Number of complementarity variables
+        double stationarityTolerance = 1.0e-3;       ///< Stationarity tolerance, tolerance for optimization
+        double complementarityTolerance = 1.0e-3;    ///< Complementarity tolerance, tolerance for complementarity vertical constraint
+        double initialPenaltyParameter = 0.01;       ///< Initial penalty parameter, initial penalty parameter for complementarity
+        double penaltyUpdateFactor = 2.0;            ///< Penalty update factor, factor for updating penaltised complementarity term
+        int nVariables;               ///< Number of variables
+        int nConstraints;             ///< Number of constraints
+        int nComplementarity;         ///< Number of complementarity variables
 
         /**
          * @brief run the solver and get the result
          * 
-         * @param input the input of the problem
-         * @param output the output of the problem
-         * @throws std::runtime_error if loading the LCQP problem fails
+         * @param[in] input The input of the problem.
+         * @param[out] output The output of the problem.
+         * @throws LCQPowException If the solver fails to solve the problem, it will throw an exception.
          */
         void runSolver(const LCQProblemInput &input, LCQProblemOutput &output);
 

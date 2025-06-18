@@ -30,6 +30,10 @@ Example_LCQPow
 Example_LCQPow_bridge
 ```
 
+The documentation for most important classes are:
+- [FLIQC_controller_core::FLIQC_controller_joint_velocity_basic](https://hwyao.github.io/projects-documentation/FLIQC_controller_core/class_f_l_i_q_c__controller__core_1_1_f_l_i_q_c__controller__joint__velocity__basic.html)
+- [FLIQC_controller_core::LCQPow_bridge](https://hwyao.github.io/projects-documentation/FLIQC_controller_core/class_f_l_i_q_c__controller__core_1_1_l_c_q_pow__bridge.html)
+
 ## Documentation
 
 You can view the online documentation at the link at the right side of this main page.

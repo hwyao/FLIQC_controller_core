@@ -1,0 +1,22 @@
+name: Doxygen GitHub Pages Deploy Action
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: hwyao/doxygen-github-pages-action@v0.1.0
+        with:
+          github_token: ${{ secrets.REPO_EDIT_TOKEN }}
+          running_folder: docs
+          html_folder: docs/html
+          config_file: Doxyfile
+          target_repo: hwyao/projects-documentation
+          target_folder: FLIQC_controller_core
+          target_branch: main

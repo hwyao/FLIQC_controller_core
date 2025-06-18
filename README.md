@@ -2,6 +2,8 @@
 
 This is the C++ library for FLIQC (Fast LInear Quadratic Complementarity) motion planner for robot controllers.
 
+[![Doxygen GitHub Pages Deploy Action](https://github.com/hwyao/FLIQC_controller_core/actions/workflows/doxygen-gh-pages.yml/badge.svg)](https://github.com/hwyao/FLIQC_controller_core/actions/workflows/doxygen-gh-pages.yml)
+
 ![FLIQC_controller_core](./image/README-FLIQC_controller_core.drawio.png)
 
 ## Installation

@@ -11,7 +11,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: hwyao/doxygen-github-pages-action@v0.1.0
+      - uses: hwyao/doxygen-github-pages-action@v0.1.1
         with:
           github_token: ${{ secrets.REPO_EDIT_TOKEN }}
           running_folder: docs

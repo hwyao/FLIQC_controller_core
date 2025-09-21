@@ -29,6 +29,37 @@ namespace FLIQC_controller_core {
         // nothing to do here
     }
 
+    FLIQC_controller_joint_velocity_basic::FLIQC_controller_joint_velocity_basic(const FLIQC_controller_joint_velocity_basic& other)
+        : nJoint(other.nJoint), 
+          lcqp_solver(){
+        // Copy cost configurations
+        quad_cost_type = other.quad_cost_type;
+        linear_cost_type = other.linear_cost_type;
+        lambda_cost_penalty = other.lambda_cost_penalty;
+
+        // Copy constraint formulation configurations
+        enable_lambda_constraint_in_L = other.enable_lambda_constraint_in_L;
+        enable_lambda_constraint_in_x = other.enable_lambda_constraint_in_x;
+        enable_esc_vel_constraint = other.enable_esc_vel_constraint;
+        enable_nullspace_projector_in_A = other.enable_nullspace_projector_in_A;
+
+        // Copy parameters configurations
+        dt = other.dt;
+        eps = other.eps;
+        active_threshold = other.active_threshold;
+        lambda_max = other.lambda_max;
+        esc_vel_max = other.esc_vel_max;
+        q_dot_max = other.q_dot_max;
+        weight_on_mass_matrix = other.weight_on_mass_matrix;
+
+        // update the lcqp_solver's parameter
+        lcqp_solver.complementarityTolerance = other.lcqp_solver.complementarityTolerance;
+        lcqp_solver.stationarityTolerance = other.lcqp_solver.stationarityTolerance;
+        lcqp_solver.initialPenaltyParameter = other.lcqp_solver.initialPenaltyParameter;
+        lcqp_solver.penaltyUpdateFactor = other.lcqp_solver.penaltyUpdateFactor;
+        lcqp_solver.updateOptions();
+    }
+
     Eigen::VectorXd FLIQC_controller_joint_velocity_basic::runController(const FLIQC_state_input& state_input, 
                                                                          const std::vector<FLIQC_distance_input> &dist_inputs,
                                                                                FLIQC_control_output& control_output) {

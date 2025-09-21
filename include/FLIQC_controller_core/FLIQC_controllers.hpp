@@ -172,6 +172,13 @@ namespace FLIQC_controller_core {
         FLIQC_controller_joint_velocity_basic(int dim_q);
         
         /**
+         * @brief Copy constructor for fliqc controller basic object
+         * 
+         * @param other The other FLIQC controller object to copy from
+         */
+        FLIQC_controller_joint_velocity_basic(const FLIQC_controller_joint_velocity_basic& other);
+        
+        /**
          * @brief Destroy the FLIQC_controller_joint_velocity_basic object
          * 
          */
